@@ -10,6 +10,7 @@ import Sales from '../Pages/Sales'
 import AdminUsers from '../Pages/AdminUsers'
 import ProfitAnalysis from '../Pages/ProfitAnalysis'
 import Reports from '../Pages/Reports'
+import Purchases from '../Pages/Purchases'
 
 const NotFound = () => {
     return <h1>404 - Página no encontrada</h1>
@@ -24,14 +25,15 @@ const AppRouter = () => {
                     {/* Rutas públicas */}
                     <Route path="/" element={isAuthenticated ? <Navigate to="/Principal" /> : <Login />} />
                     <Route path="/Cambio-de-contrasena" element={<Upd_pass />} />
+                    <Route path='/Registro' element={<Register />}/>
 
                     {/* Rutas protegidas */}
                     <Route path='/Principal' element={<Home />}/>
-                    <Route path='/Registro' element={<Register />}/>
                     <Route path='/Ventas' element={<Sales />}/>
                     <Route path='/Administrar-usuarios' element={<AdminUsers />}/>
                     <Route path='/Analisis-de-rentabilidad' element={<ProfitAnalysis />}/>
                     <Route path='/Informes' element={<Reports />}/>
+                    <Route path='/Compras' element={<Purchases />}/>
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </Layout>

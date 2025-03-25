@@ -43,7 +43,7 @@ const UserList = () => {
 
     return (
         <div className="user-container">
-            <h2>Lista de Usuarios</h2>
+            <h2 className="text-center text-titulo">Lista de Usuarios</h2>
 
             <div className="search-container">
                 <FaSearch className="search-icon" />
@@ -59,7 +59,6 @@ const UserList = () => {
             <table border="1" className="user-table">
                 <thead>
                     <tr>
-                        <th>Seleccionar</th>
                         <th>Nombre</th>
                         <th>Correo</th>
                         <th>Rol</th>
@@ -74,15 +73,6 @@ const UserList = () => {
                                 onClick={() => !editMode && setSelectedUserId(user.id)} 
                                 className={selectedUserId === user.id ? "selected" : ""}
                             >
-                                <td>
-                                    <input 
-                                        type="radio" 
-                                        name="selectedUser" 
-                                        checked={selectedUserId === user.id}
-                                        onChange={() => !editMode && setSelectedUserId(user.id)}
-                                        disabled={editMode}
-                                    />
-                                </td>
                                 <td>
                                     {editMode && selectedUserId === user.id ? (
                                         <input 

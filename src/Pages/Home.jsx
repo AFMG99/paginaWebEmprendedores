@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaUserCog, FaShoppingCart, FaChartBar, FaFileAlt, FaUsers, FaUserPlus, FaCashRegister, FaShoppingBasket, FaDollarSign } from "react-icons/fa";
+import { FaUserCog, FaShoppingCart, FaChartBar, FaFileAlt, FaUsers, FaUserPlus, FaCashRegister, FaShoppingBasket, FaDollarSign, FaClipboardList, FaShoppingBag } from "react-icons/fa";
 import MenuList from '../components/Sidebar/MenuList';
 import AdminUsers from './AdminUsers';
 import ProfitAnalysis from './ProfitAnalysis';
@@ -7,14 +7,16 @@ import Reports from './Reports';
 import Sales from './Sales';
 import CreateUser from '../components/AdminUsers/CreateUser';
 import UserList from '../components/AdminUsers/UserList';
+import Purchases from './Purchases';
+import RegisterPurchase from '../components/Purchases/RegisterPurchase';
 
 const Home = () => {
     const [selectedItem, setSelectedItem] = useState(null);
-    const [resetAdminUsers, setResetAdminUsers] = useState(false);
+    const [reset, setReset] = useState(0);  
 
     const handleItemClick = (item) => {
-        if (item.name === "Usuarios") {
-            setResetAdminUsers((prev) => !prev);
+        if (item.name === "Usuarios" || item.name === "Ventas" || item.name === "Compras" || item.name === "Registrar") {
+            setReset(prev => prev + 1);
         }
         setSelectedItem(item);
     };
@@ -23,26 +25,32 @@ const Home = () => {
         {
             name: "Usuarios",
             icon: <FaUserCog />,
-            component: <AdminUsers resetView={resetAdminUsers} />,
+            component: <AdminUsers resetView={reset} />,
             subItems: [
                 { name: "Consultar", icon: <FaUsers />, component: <UserList /> },
                 { name: "Registrar", icon: <FaUserPlus />, component: <CreateUser /> },
             ],
         },
-        { 
-            name: "Ventas", 
-            icon: <FaShoppingCart />, 
-            component: <Sales />,
+        {
+            name: "Ventas",
+            icon: <FaShoppingCart />,
+            component: <Sales resetView={reset} />,
             subItems: [
-                {name: "Registrar", icon: <FaCashRegister />},
+                { name: "Consultar", icon: <FaClipboardList /> },
+                { name: "Registrar", icon: <FaCashRegister /> },
             ],
         },
-        { 
-            name: "Compras", 
-            icon: <FaShoppingBasket />, 
-            component: <Sales />,
+        {
+            name: "Compras",
+            icon: <FaShoppingBasket />,
+            component: <Purchases resetView={reset} />,
             subItems: [
-                {name: "Registrar", icon: <FaDollarSign />},
+                { name: "Consultar", icon: <FaShoppingBag /> },
+                { 
+                    name: "Registrar", 
+                    icon: <FaDollarSign />, 
+                    component: <RegisterPurchase key={reset} resetView={reset} />
+                },
             ],
         },
         { name: "Rentabilidad", icon: <FaChartBar />, component: <ProfitAnalysis /> },
@@ -52,10 +60,10 @@ const Home = () => {
     return (
         <div className="home-container">
             <aside className="sidebar">
-                <MenuList 
-                    menuItems={menuItems} 
-                    onItemClick={handleItemClick} 
-                    selectedItem={selectedItem} 
+                <MenuList
+                    menuItems={menuItems}
+                    onItemClick={handleItemClick}
+                    selectedItem={selectedItem}
                 />
             </aside>
             <main className="content">

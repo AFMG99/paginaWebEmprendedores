@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { FaClipboardList, FaCashRegister } from 'react-icons/fa';
+import { FaShoppingBag, FaDollarSign } from 'react-icons/fa';
+import RegisterPurchase from '../components/Purchases/RegisterPurchase';
 
-
-const Sales = ({ resetView }) => {
+const Purchases = ({ resetView }) => {
     const [selectedOption, setSelectedOption] = useState(null);
 
     useEffect(() => {
         setSelectedOption(null);
-    }, [resetView]);
+    }, [resetView]);    
 
     const handleCardClick = (option) => {
         setSelectedOption(option);
@@ -18,21 +18,22 @@ const Sales = ({ resetView }) => {
             {selectedOption === null ? (
                 <div className="cards-container">
                     <div className="card" onClick={() => handleCardClick("consultar")}>
-                        <FaClipboardList className="card-icon" />
-                        <span>Consultar Ventas</span>
+                        <FaShoppingBag className="card-icon" />
+                        <span>Consultar Compras</span>
                     </div>
                     <div className="card" onClick={() => handleCardClick("registrar")}>
-                        <FaCashRegister className="card-icon" />
-                        <span>Registrar Ventas</span>
+                        <FaDollarSign className="card-icon" />
+                        <span>Registrar Compras</span>
                     </div>
                 </div>
             ) : (
                 <>
-                    
+                    {selectedOption === "consultar" && <RegisterPurchase />}
+                    {selectedOption === "registrar" && <RegisterPurchase resetView={resetView}/>}
                 </>
             )}
         </div>
-    )
-}
+    );
+};
 
-export default Sales
+export default Purchases;
