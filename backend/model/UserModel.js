@@ -1,5 +1,14 @@
-import { sql } from '../conf/database.js';
+import { getConnection, sql } from '../conf/database.js';
 import bcrypt from 'bcrypt';
+
+const getAllUser = async () => {
+    try {
+        const result = await sql.query('SELECT * FROM Usuarios');
+        return result.recordset;
+    } catch (error) {
+        throw error;
+    }
+};
 
 const getUserByEmail = async (email) => {
     try {
@@ -16,10 +25,22 @@ const getUserByEmail = async (email) => {
     }
 };
 
+const authenticateUser = async (name, password) => {
+    try {
+        await getConnection();
+        const result = await new sql.Request()
+            .input('name', sql.VarChar, name)
+            .input('password', sql.VarChar, password)
+            .query(`SELECT id, name, email, role FROM Usuarios WHERE name = @name AND password = @password`);
+
+        return result.recordset.length > 0 ? result.recordset : [];
+    } catch (error) {
+        throw new Error('Error en la consulta SQL: ' + error.message);
+    }
+};
+
 const createUser = async (name, email, password, role = "Usuario") => {
     try {
-        // const salt = await bcrypt.getSalt(10);
-        // const hashedPassword = await bcrypt.hash(password, salt);
 
         const request = new sql.Request();
         request.input("name", sql.VarChar, name);
@@ -37,6 +58,37 @@ const createUser = async (name, email, password, role = "Usuario") => {
     } catch (error) {
         throw new Error('Error en la consulta SQL: ' + error.message);
     }
-}
+};
 
-export { createUser, getUserByEmail };
+const updateUser = async (id, name, email, role) => {
+    await getConnection();
+    try {
+        await new sql.Request()
+            .input('id', sql.Int, id)
+            .input('name', sql.VarChar, name)
+            .input('email', sql.VarChar, email)
+            .input('role', sql.VarChar, role)
+            .query(
+                `UPDATE Usuarios
+                SET name = @name, email = @email, role = @role
+                WHERE id = @id`
+            );
+        return { message: "Usuario actualizado correctamente" };
+    } catch (error) {
+        throw new Error('Error en la consulta SQL: ' + error.message);
+    }
+};
+
+const removeUser = async (id) => {
+    await getConnection();
+    try {
+        await new sql.Request()
+            .input('id', sql.Int, id)
+            .query(`DELETE FROM Usuarios WHERE id = @id`);
+            return { message: "Usuario eliminado correctamente" };
+    } catch (error) {
+        throw new Error('Error en la consulta SQL: ' + error.message);
+    }
+};
+
+export { createUser, getUserByEmail, getAllUser, updateUser, removeUser, authenticateUser };

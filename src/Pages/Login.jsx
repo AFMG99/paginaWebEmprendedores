@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../assets/css/styles.css';
 import imagen from '../../src/assets/img/Logo_web.png';
 import Swal from 'sweetalert2';
+import { userLogin } from '../service/Services';
 
 const Login = () => {
     const [username, setUsername] = useState('')
@@ -10,8 +11,9 @@ const Login = () => {
     const [errorMessage, setErrorMessage] = useState('')
     const navigate = useNavigate()
 
-    const handleLogin = (e) => {
-        e.preventDefault()
+    const handleLogin = async (e) => {
+        e.preventDefault();
+
         if (!username || !password) {
             Swal.fire({
                 icon: 'warning',
@@ -21,18 +23,24 @@ const Login = () => {
             });
             return;
         }
-        navigate('/Principal')
-        // if (username === 'usuario' && password === 'contraseña') {
-        //     setErrorMessage('');
-        //     Swal.fire({
-        //         icon: 'success',
-        //         title: 'Inicio de sesión exitoso',
-        //         text: '¡Bienvenido!',
-        //         confirmButtonText: 'Aceptar'
-        //     }).then(() => navigate('/Principal'));
-        // } else {
-        //     setErrorMessage('Usuario o contraseña incorrectos');
-        // }
+
+        try {
+            const user = await userLogin(username, password);
+
+            if (user && user.length > 0) { 
+                setErrorMessage('');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Inicio de sesión exitoso',
+                    text: '¡Bienvenido!',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => navigate('/Principal'));
+            } else {
+                setErrorMessage('Usuario o contraseña incorrectos');
+            }
+        } catch (error) {
+            setErrorMessage(error.response?.data?.message || error.message);
+        }
     };
 
     const handleNewPassword = (e) => {

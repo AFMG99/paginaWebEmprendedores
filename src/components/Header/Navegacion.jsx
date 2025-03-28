@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { FaUserCircle, FaCog, FaBell } from 'react-icons/fa';
-import PerfilModal from './Modals/PerfilModal';
-import ConfigModal from './Modals/ConfigModal';
-import NotiModal from './Modals/NotiModal';
+import PerfilModal from '../Modals/PerfilModal';
+import ConfigModal from '../Modals/ConfigModal';
+import NotiModal from '../Modals/NotiModal';
 import '../../assets/css/styles.css';
 
 const navegacion = () => {

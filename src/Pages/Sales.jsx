@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaClipboardList, FaCashRegister } from 'react-icons/fa';
+import RegisterSale from '../components/Sales/RegisterSale';
+import CheckSale from '../components/Sales/CheckSale';
 
 
 const Sales = ({ resetView }) => {
@@ -28,7 +30,8 @@ const Sales = ({ resetView }) => {
                 </div>
             ) : (
                 <>
-                    
+                    {selectedOption === "consultar" && <CheckSale resetView={resetView}/>}
+                    {selectedOption === "registrar" && <RegisterSale resetView={resetView}/>}
                 </>
             )}
         </div>

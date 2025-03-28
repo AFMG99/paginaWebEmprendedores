@@ -19,7 +19,7 @@
 }
 
 /* Estilos para la imagen de inicio de sesión */
-.login-image{
+.login-image {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -177,7 +177,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 50px; 
+    width: 50px;
     height: 50px;
     transition: background-color 0.3s ease;
 }
@@ -309,7 +309,7 @@
 /* *******************************Estilos de Pantalla Home************************************** */
 .home-container {
     display: flex;
-    height: 93vh;
+    height: 93.28vh;
     background: linear-gradient(135deg, #7558cb, #8f79be, #cbb2f8);
 }
 
@@ -435,7 +435,8 @@
 
 /* Estilos del Componente UserList */
 /* Contenedor principal */
-.user-container {
+.user-container, 
+.sales-container {
     margin: auto;
     padding: 10px;
     border-radius: 10px;
@@ -468,49 +469,131 @@
     font-size: 16px;
 }
 
+.filters-container {
+    /* gap: 10px; */
+    padding-left: 15px;
+    justify-content: space-between;
+}
+
+.desplegable {
+    border: none;
+    margin-left: auto;
+    width: 100%;
+    outline: none;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.desplegable-paginacion {
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(79, 17, 166, 0.5);
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    border: 2px solid #6200ea;
+    padding: 8px 12px;
+    border-radius: 20px;
+    background: white;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.filter-item label {
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    background: white;
+    padding: 0 5px;
+    font-size: 12px;
+    color: #6200ea;
+}
+
+.filter-item input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 15px;
+}
+
 /* Contenedor de la tabla */
 .table-container {
     height: 52vh;
-    overflow-y: auto;
+    overflow: auto;
+    overflow-y: hidden;
     border-radius: 10px;
     border: 2px solid #6200ea;
     background: white;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Tabla de usuarios */
-.user-table {
+.user-table, 
+.sales-table {
     width: 100%;
     border-collapse: collapse;
     border-radius: 10px;
-    overflow: hidden;
 }
 
-.user-table th {
+/* Fijamos thead */
+.sales-table thead {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+/* Hacemos scroll solo en tbody */
+.sales-table tbody {
+    display: block;
+    max-height: 45vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.user-table th, 
+.sales-table th {
     background-color: #6200ea;
     color: white;
     padding: 12px;
     text-align: left;
 }
 
-.user-table td {
+/* Aseguramos alineación */
+.sales-table tr {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.user-table td, 
+.sales-table td {
     padding: 12px;
     border-bottom: 1px solid #ddd;
 }
 
 /* Estilos para la fila seleccionada */
-.user-table .selected {
+.user-table .selected, 
+.sales-table .selected {
     background-color: #e3ddff;
     font-weight: bold;
 }
 
 /* Efecto hover en las filas */
-.user-table tr:hover {
+.user-table tr:hover, 
+.sales-table tr:hover {
     background-color: #f0e6ff;
     cursor: pointer;
 }
 
 /* Estilo para cuando no hay usuarios */
-.no-users {
+.no-users, .no-sales {
     text-align: center;
     font-style: italic;
     padding: 10px;
@@ -518,12 +601,15 @@
 }
 
 /* Estilos para los inputs dentro de la tabla */
-.user-table input, .user-table select {
+.sales-table input,
+.sales-table select,
+.user-table input,
+.user-table select {
     width: 100%;
     padding: 8px;
-    border: 1px solid #6200ea; /* Color morado */
+    border: 1px solid #6200ea;
     border-radius: 5px;
-    background-color: #f5f5f5; /* Un tono claro para mejor visibilidad */
+    background-color: #f5f5f5;
     color: #333;
     font-size: 14px;
     outline: none;
@@ -531,15 +617,18 @@
 }
 
 /* Cambios en el foco */
+.sales-table input:focus,
+.sales-table select:focus,
 .user-table input:focus,
 .user-table select:focus {
-    border-color: #3700b3; /* Un tono de morado más oscuro */
+    border-color: #3700b3;
     box-shadow: 0 0 5px rgba(98, 0, 234, 0.5);
     background-color: white;
 }
 
 /* Ajuste para los selects */
-.user-table select {
+.user-table select, 
+.sales-table select {
     cursor: pointer;
 }
 
@@ -548,11 +637,14 @@
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 /* Botones */
-.edit-button, .save-button, .delete-button {
+.edit-button,
+.save-button,
+.delete-button,
+.cancel-button {
     border: none;
     padding: 12px;
     font-size: 18px;
@@ -582,6 +674,11 @@
     color: white;
 }
 
+.cancel-button {
+    background-color: #6c757d;
+    color: white;
+}
+
 /* Efecto hover */
 .edit-button:hover {
     background-color: #4a148c;
@@ -595,13 +692,65 @@
     background-color: #b22222;
 }
 
+.cancel-button:hover {
+    background-color: #5a6268;
+}
+
 /* Deshabilitar botones */
-.edit-button:disabled, 
-.save-button:disabled, 
-.delete-button:disabled {
+.edit-button:disabled,
+.save-button:disabled,
+.delete-button:disabled,
+.cancel-button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
     box-shadow: none;
+}
+
+/* Estilo de paginación de las tablas */
+.pagination-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 40px;
+}
+
+.pagination-container p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.pagination {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.pagination button {
+    background-color: #6200ea;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.3s;
+    font-weight: 500;
+    padding: 2px 8px;
+}
+
+.pagination button:hover {
+    background-color: #e0e0ff;
+}
+
+.pagination button:hover:not(:disabled) {
+    background-color: #3700b3;
+    transform: scale(1.05);
+}
+
+.pagination button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    color: #666;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------------
@@ -653,4 +802,104 @@
 .full-width {
     width: 100%;
     height: 100%;
+}
+
+/* Estilos del Carrousel */
+.carousel-caption {
+    bottom: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    padding: 10px;
+}
+.carousel img {
+    object-fit: cover;
+    height: 400px;
+    border-radius: 15px;
+}
+
+.carousel {
+    margin: auto;
+    padding: auto;
+    width: 80%;
+    margin-bottom: 45px;
+}
+
+/* Botón flotante en la parte inferior derecha */
+.floating-button {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background-color: #6A1B9A;
+    color: white;
+    border: none;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    font-size: 50px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+.floating-button:hover {
+    background-color: #4A148C;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------*/
+/************************************************ Estilos Modales ****************************************************/
+.modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    position: relative;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.modal-content.animate {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    border: none;
+    background: transparent;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #555;
+}
+
+.modal-close:hover {
+    color: #000;
+}
+
+.modal-body {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.modal-img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
 }

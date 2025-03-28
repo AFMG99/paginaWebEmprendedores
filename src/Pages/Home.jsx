@@ -9,10 +9,13 @@ import CreateUser from '../components/AdminUsers/CreateUser';
 import UserList from '../components/AdminUsers/UserList';
 import Purchases from './Purchases';
 import RegisterPurchase from '../components/Purchases/RegisterPurchase';
+import HomeCarrousel from '../components/Carrousel/HomeCarrousel';
+import RegisterSale from '../components/Sales/RegisterSale';
+import CheckSale from '../components/Sales/CheckSale';
 
 const Home = () => {
     const [selectedItem, setSelectedItem] = useState(null);
-    const [reset, setReset] = useState(0);  
+    const [reset, setReset] = useState(0);
 
     const handleItemClick = (item) => {
         if (item.name === "Usuarios" || item.name === "Ventas" || item.name === "Compras" || item.name === "Registrar") {
@@ -36,8 +39,16 @@ const Home = () => {
             icon: <FaShoppingCart />,
             component: <Sales resetView={reset} />,
             subItems: [
-                { name: "Consultar", icon: <FaClipboardList /> },
-                { name: "Registrar", icon: <FaCashRegister /> },
+                { 
+                    name: "Consultar", 
+                    icon: <FaClipboardList />,
+                    component: <CheckSale key={reset} resetView={reset} /> 
+                },
+                { 
+                    name: "Registrar", 
+                    icon: <FaCashRegister />, 
+                    component: <RegisterSale key={reset} resetView={reset} /> 
+                },
             ],
         },
         {
@@ -46,9 +57,9 @@ const Home = () => {
             component: <Purchases resetView={reset} />,
             subItems: [
                 { name: "Consultar", icon: <FaShoppingBag /> },
-                { 
-                    name: "Registrar", 
-                    icon: <FaDollarSign />, 
+                {
+                    name: "Registrar",
+                    icon: <FaDollarSign />,
                     component: <RegisterPurchase key={reset} resetView={reset} />
                 },
             ],
@@ -67,8 +78,11 @@ const Home = () => {
                 />
             </aside>
             <main className="content">
-                {selectedItem ? selectedItem.component : <h2>Seleccione una opción</h2>}
+                {selectedItem ? selectedItem.component : <HomeCarrousel />}
             </main>
+            <button className="floating-button">
+                💬
+            </button>
         </div>
     );
 };
