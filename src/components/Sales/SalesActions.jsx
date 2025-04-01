@@ -8,17 +8,29 @@ const SalesActions = (
         handleCancel,
         handleSave,
         handleDelete,
-        selectedSaleId
+        selectedSaleId,
+        selectedProduct,
+        showNewButton = true
     }) => (
     <div className="footer">
         {!editMode ? (
-            <button
-                onClick={handleEdit}
-                className='edit-button'
-                disabled={!selectedSaleId}
-            >
-                <FaEdit />
-            </button>
+            <>
+                <button
+                    onClick={handleEdit}
+                    className='edit-button'
+                    disabled={!selectedSaleId || !selectedProduct}
+                >
+                    <FaEdit />
+                </button>
+                {showNewButton && (
+                    <button
+                        onClick={handleSave}
+                        className='save-button'
+                    >
+                        <FaSave />
+                    </button>
+                )}
+            </>
         ) : (
             <>
                 <button
@@ -38,7 +50,7 @@ const SalesActions = (
         <button
             onClick={handleDelete}
             className='delete-button'
-            disabled={!selectedSaleId || editMode}
+            disabled={!selectedSaleId || !selectedProduct || editMode}
         >
             <FaTrash />
         </button>

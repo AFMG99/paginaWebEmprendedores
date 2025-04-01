@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import SalesFilters from './SalesFilters';
-import SalesTable from './SalesTable';
 import SalesActions from './SalesActions';
 import Pagination from './Pagination';
 import SaleModal from '../Modals/SaleModal';
+import QueryTable from './Tables/QueryTable';
 
 const CheckSale = () => {
     const [sales, setSales] = useState([]);
@@ -121,7 +121,7 @@ const CheckSale = () => {
                     setFilterProduct
                 }}
             />
-            <SalesTable
+            <QueryTable
                 {...{
                     sales: currentSales,
                     selectedSaleId,
@@ -152,7 +152,9 @@ const CheckSale = () => {
                     handleCancel,
                     handleSave,
                     handleDelete,
-                    selectedSaleId
+                    selectedProduct:selectedSaleId,
+                    selectedSaleId,
+                    showNewButton: false
                 }}
             />
             <SaleModal sale={showModalSale} onClose={() => setShowModalSale(null)} />

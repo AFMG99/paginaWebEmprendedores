@@ -11,13 +11,6 @@
     padding: 0;
 }
 
-/* Contenedor principal con dos columnas */
-.row {
-    width: 100%;
-    height: 100%;
-    display: flex;
-}
-
 /* Estilos para la imagen de inicio de sesión */
 .login-image {
     display: flex;
@@ -472,7 +465,13 @@
 .filters-container {
     /* gap: 10px; */
     padding-left: 15px;
+    padding-right: 15px;
     justify-content: space-between;
+}
+
+.text-area {
+    outline: none;
+    border: none;
 }
 
 .desplegable {

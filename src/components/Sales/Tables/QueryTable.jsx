@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SalesTable = (
+const QueryTable = (
     {
         sales,
         selectedSaleId,
@@ -96,4 +96,4 @@ const SalesTable = (
     );
 }
 
-export default SalesTable;
+export default QueryTable;

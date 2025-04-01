@@ -58,7 +58,7 @@ const CreateUser = () => {
                 setValidation(initialValidation);
             });
         } catch (error) {
-            Swal.fire("Error", error.response.data?.message || "Error al registrar usuario", "error");
+            Swal.fire("Error", error.message || "Error al registrar usuario", "error");
         } finally {
             setLoading(false);
         }
