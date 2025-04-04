@@ -28,7 +28,7 @@ const Purchases = ({ resetView }) => {
                 </div>
             ) : (
                 <>
-                    {selectedOption === "consultar" && <RegisterPurchase />}
+                    {selectedOption === "consultar"}
                     {selectedOption === "registrar" && <RegisterPurchase resetView={resetView}/>}
                 </>
             )}

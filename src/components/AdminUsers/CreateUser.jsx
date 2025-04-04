@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Swal from "sweetalert2";
-import { FaSave } from "react-icons/fa";
+import { FaSave, FaTimes } from "react-icons/fa";
 import { registerUser } from "../../service/Services.js";
 
 const CreateUser = () => {
@@ -58,11 +58,16 @@ const CreateUser = () => {
                 setValidation(initialValidation);
             });
         } catch (error) {
-            Swal.fire("Error", error.response.data?.message || "Error al registrar usuario", "error");
+            Swal.fire("Error", error.message || "Error al registrar usuario", "error");
         } finally {
             setLoading(false);
         }
     };
+
+    const handleCancel = () => {
+        setNewUser(initialState);
+        setValidation(initialValidation);
+    }
 
     return (
         <div className="d-flex flex-column">
@@ -142,6 +147,13 @@ const CreateUser = () => {
                     onClick={handleSubmit}
                 >
                     <FaSave />
+                </button>
+                <button
+                    className="cancel-button"
+                    disabled={!isValidForm}
+                    onClick={handleCancel}
+                >
+                    <FaTimes />
                 </button>
             </div>
         </div>
