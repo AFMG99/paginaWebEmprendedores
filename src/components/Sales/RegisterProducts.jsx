@@ -40,22 +40,32 @@ const RegisterProducts = () => {
     };
 
     const calculatedCurrentStock = formData.current_stock + tempQuantity;
+    const productExists = formData.cod.trim() !== '' &&
+        products.some(product => product.cod === formData.cod);
+
+    const handleClean = () => {
+        setFormData({
+            cod: '',
+            created_at: new Date().toISOString().split('T')[0],
+            product: '',
+            description: '',
+            price: 0,
+            current_stock: 0,
+            min_stock: 0,
+            image: '',
+            update_at: new Date().toISOString().split('T')[0],
+        });
+        setTempQuantity(0);
+        setEditMode(false);
+        setSelectedProduct(null);
+        setLoading(true);
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
 
         if (name === 'cod' && value.trim() === '') {
-            setFormData({
-                cod: '',
-                created_at: new Date().toISOString().split('T')[0],
-                product: '',
-                description: '',
-                price: 0,
-                current_stock: 0,
-                min_stock: 0,
-                image: '',
-                update_at: new Date().toISOString().split('T')[0],
-            });
+            handleClean();
             return;
         }
 
@@ -64,13 +74,53 @@ const RegisterProducts = () => {
             ? Number(value) || 0
             : value;
 
-        setFormData({ ...formData, [name]: processedValue });
+        setFormData(prev => ({
+            ...prev,
+            [name]: processedValue,
+            ...(name === 'cod' && {
+                id: undefined,
+                created_at: new Date().toISOString().split('T')[0],
+                product: '',
+                description: '',
+                price: 0,
+                current_stock: 0,
+                min_stock: 0,
+                image: '',
+                update_at: new Date().toISOString().split('T')[0],
+            })
+        }));
+    };
+
+    const handleCodeBlur = () => {
+        if (formData.cod.trim() !== '') {
+            const existingProduct = products.find(p => p.cod === formData.cod);
+
+            if (existingProduct) {
+                setFormData({
+                    ...existingProduct,
+                    update_at: new Date().toISOString().split('T')[0]
+                });
+            } else {
+                setFormData(prev => ({
+                    cod: prev.cod,
+                    created_at: new Date().toISOString().split('T')[0],
+                    product: '',
+                    description: '',
+                    price: 0,
+                    current_stock: 0,
+                    min_stock: 0,
+                    image: '',
+                    update_at: new Date().toISOString().split('T')[0],
+                    id: undefined
+                }));
+            }
+        }
     };
 
     const handleImageChange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (!formData.cod.trim()) {
+        if (!formData.cod.trim() || !products.some(p => p.cod === formData.cod)) {
             Swal.fire("Error", "Primero ingrese un código de producto", "error");
             return;
         }
@@ -86,6 +136,7 @@ const RegisterProducts = () => {
             showError("No se pudo subir la imagen", error);
         } finally {
             setLoading(false);
+            e.target.value = '';
         }
     };
 
@@ -105,47 +156,36 @@ const RegisterProducts = () => {
 
     const handleCancel = () => {
         setEditMode(false);
-        setTempQuantity(1);
-        setFormData({
-            cod: '',
-            created_at: new Date().toISOString().split('T')[0],
-            product: '',
-            description: '',
-            price: 0,
-            current_stock: 0,
-            min_stock: 0,
-            image: '',
-            update_at: new Date().toISOString().split('T')[0],
-        });
-        setSelectedProduct(null);
+        handleClean();
     };
 
     const handleSave = async () => {
         if (!validateForm()) return;
         setLoading(true);
+
         try {
-            const productData = {
+            const { id, ...productData } = {
                 ...formData,
                 price: Number(formData.price),
-                current_stock: Number(formData.current_stock) + Number(tempQuantity),
+                current_stock: calculatedCurrentStock,
                 min_stock: Number(formData.min_stock),
-                update_at: new Date().toISOString().split('T')[0]
+                update_at: new Date().toISOString()
             };
-            if (editMode) {
-                await ProductService.update(formData.cod, productData);
-            } else {
-                await ProductService.create(productData);
-            }
+
+            const result = editMode && selectedProduct
+                ? await ProductService.update(selectedProduct.cod, productData)
+                : await ProductService.create(productData);
+
+            setFormData(prev => ({
+                ...result,
+                image: prev.image
+            }));
+
             await fetchProducts();
-            handleCancel();
-            Swal.fire("Guardado", "Los cambios han sido guardados", "success");
+            Swal.fire("Guardado", "Cambios realizados", "success");
         } catch (error) {
-            console.error("Error detallado al guardar:", {
-                formData,
-                tempQuantity,
-                error
-            });
-            showError("Error al guardar el producto", error);
+            console.error("Error al guardar:", error);
+            showError("Error al guardar", error);
         } finally {
             setLoading(false);
         }
@@ -168,7 +208,6 @@ const RegisterProducts = () => {
         if (isConfirmed) {
             setLoading(true);
             try {
-                await ProductService.deleteImage(selectedProduct.image);
                 await ProductService.delete(selectedProduct.cod);
                 await fetchProducts();
                 handleCancel();
@@ -196,13 +235,14 @@ const RegisterProducts = () => {
 
     return (
         <div>
-            {loading && <div className="loading-overlay">Cargando...</div>}
+            <h2 className='text-center text-titulo'>Registro de productos</h2>
             <ProductForm
                 formData={formData}
                 handleChange={handleChange}
                 handleImageChange={handleImageChange}
                 products={products}
                 setFormData={setFormData}
+                handleCodeBlur={handleCodeBlur}
             />
 
             <ProductsTable
@@ -227,6 +267,8 @@ const RegisterProducts = () => {
                 selectedSaleId={selectedProduct?.cod}
                 selectedProduct={selectedProduct}
                 showNewButton={formData.cod !== ''}
+                productExists={productExists}
+                handleClean={handleClean}
             />
         </div>
     );

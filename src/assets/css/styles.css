@@ -643,7 +643,8 @@
 .edit-button,
 .save-button,
 .delete-button,
-.cancel-button {
+.cancel-button,
+.clean-button {
     border: none;
     padding: 12px;
     font-size: 18px;
@@ -675,6 +676,11 @@
 
 .cancel-button {
     background-color: #6c757d;
+    color: white;
+}
+
+.clean-button {
+    background-color: purple;
     color: white;
 }
 

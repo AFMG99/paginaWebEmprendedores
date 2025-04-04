@@ -146,7 +146,7 @@ const ProductsTable = ({
         });
     };
     return (
-        <div className='table-container' style={{ height: '300px' }}>
+        <div className='table-container' style={{ height: '250px' }}>
             <table border="1" className='sales-table'>
                 <thead>
                     <tr>

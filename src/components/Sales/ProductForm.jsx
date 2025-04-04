@@ -5,7 +5,8 @@ const ProductForm = ({
     handleChange,
     handleImageChange,
     products,
-    setFormData
+    setFormData,
+    handleCodeBlur
 }) => {
     useEffect(() => {
         if (formData.cod.trim()) {
@@ -29,6 +30,7 @@ const ProductForm = ({
                             name='cod'
                             value={formData.cod}
                             onChange={handleChange}
+                            onBlur={handleCodeBlur}
                             autoComplete="off"
                         />
                     </div>
@@ -70,12 +72,12 @@ const ProductForm = ({
                         htmlFor="imageUpload"
                         className='w-100 d-flex flex-colum align-items-center justify-content-center text-center'
                         style={{
-                            cursor: formData.cod.trim() ? 'pointer' : 'not-allowed',
+                            cursor: products.some(p => p.cod === formData.cod) ? 'pointer' : 'not-allowed',
                             minHeight: '200px',
                             border: '2px dashed #ccc',
-                            opacity: formData.cod.trim() ? 1 : 0.6
+                            opacity: products.some(p => p.cod === formData.cod) ? 1 : 0.6
                         }}
-                        title={!formData.cod.trim() ? "Primero ingrese un código de producto" : ""}
+                        title={!products.some(p => p.cod === formData.cod) ? "Primero ingrese un código de producto" : ""}
                     >
                         {formData.image ? (
                             <img
@@ -98,7 +100,7 @@ const ProductForm = ({
                         accept='image/*'
                         onChange={handleImageChange}
                         className='d-none'
-                        disabled={!formData.cod.trim()}
+                        disabled={!products.some(p => p.cod === formData.cod)}
                     />
                 </div>
             </div>

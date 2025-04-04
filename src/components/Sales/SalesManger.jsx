@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaBoxOpen, FaReceipt } from 'react-icons/fa';
 import RegisterProducts from './RegisterProducts';
+import RegisterSale from './RegisterSale';
+import RegisterSales from './RegisterSales';
 
 const SalesManager = ({ resetView }) => {
     const [selectedType, setSelectedType] = useState(null);
@@ -24,7 +26,7 @@ const SalesManager = ({ resetView }) => {
 
             <div className="purchase-content full-width">
                 {selectedType === 'productos' && <RegisterProducts />}
-                {selectedType === 'ventas' }
+                {selectedType === 'ventas' && <RegisterSale />}
             </div>
         </div>
     );

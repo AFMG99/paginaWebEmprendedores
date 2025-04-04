@@ -179,52 +179,149 @@ export const ProductService = {
 
     // Subir imagen de producto
     async uploadImage(file, cod) {
-        if (!cod) {
-            throw new Error("Código de producto requerido para subir imagen");
-        }
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${cod}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-        const filePath = `product-images/${fileName}`;
-
-        // Validar tipo de archivo
-        const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
+        if (!cod) throw new Error("Código de producto requerido.");
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
             throw new Error("Solo se permiten imágenes JPEG, PNG o WEBP");
-        }
+        };
+        if (file.size > 2 * 1024 * 1024) throw new Error("Límite de 2MB excedido");
 
-        if (file.size > 2 * 1024 * 1024) {
-            throw new Error("La imagen no puede superar los 2MB");
-        }
+        const fileExt = file.name.split('.').pop();
+        const filePath = `product-images/${cod}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
-        const { error: uploadError } = await supabase.storage
+        const { error } = await supabase.storage
             .from('product-images')
             .upload(filePath, file, {
                 cacheControl: '3600',
                 upsert: true
             });
 
-        if (uploadError) {
-            console.error("Error detallado al subir:", uploadError);
-            throw uploadError;
+        if (error) {
+            console.error("Error al subir:", { filePath, error });
+            throw error;
         }
 
-        const { data: { publicUrl } } = supabase.storage
-            .from('product-images')
-            .getPublicUrl(filePath);
+        return supabase.storage.from('product-images').getPublicUrl(filePath).data.publicUrl;;
+    },
+};
 
-        return publicUrl;
+export const SalesService = {
+    async getAll() {
+        const { data, error } = await supabase
+            .from('sales')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
     },
 
-    // Eliminar imagen de producto
-    async deleteImage(imageUrl) {
-        if (!imageUrl) return true;
+    async getById(id) {
+        const { data, error } = await supabase
+            .from('sales')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-        const imagePath = imageUrl.split('/').pop();
-        const { error } = await supabase.storage
-            .from('product-images')
-            .remove([imagePath]);
+        if (error) throw error;
+        return data;
+    },
+
+    async update(id, data) {
+        const { total, ...updateData } = data;
+
+        const { data: updated, error} = await supabase
+            .from('sales')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return updated;
+    },
+
+    async updateWithStock(id, data, quantityDiff) {
+        const { data: updatedSale, error: saleError } = await supabase
+            .from('sales')
+            .update(data)
+            .eq('id', id)
+            .select()
+            .single();
+    
+        if (saleError) throw saleError;
+
+        if (quantityDiff !== 0) {
+            const { error: stockError } = await supabase.rpc('update_product_stock', {
+                product_id: data.product_id,
+                quantity_change: -quantityDiff
+            });
+    
+            if (stockError) {
+                console.error("Error updating stock:", stockError);
+                throw new Error("No se pudo actualizar el stock del producto");
+            }
+        }
+    
+        return updatedSale;
+    },    
+
+    async delete(id) {
+        const { error } = await supabase
+            .from('sales')
+            .delete()
+            .eq('id', id);
 
         if (error) throw error;
         return true;
+    },
+
+    async createBatch(salesData) {
+        try {
+            // Obtener productos únicos
+            const productCodes = [...new Set(salesData.map(s => s.product_cod))];
+            const { data: products, error: productsError } = await supabase
+                .from('products')
+                .select('*')
+                .in('cod', productCodes);
+
+            if (productsError) throw productsError;
+
+            // Crear registros de venta
+            const salesRecords = salesData.map(sale => {
+                const product = products.find(p => p.cod === sale.product_cod);
+                if (!product) throw new Error(`Producto ${sale.product_cod} no encontrado`);
+
+                return {
+                    product_id: product.id,
+                    product_name: product.product,
+                    price: sale.price,
+                    quantity: sale.quantity,
+                    payment_method: sale.payment_method,
+                    created_at: sale.created_at
+                };
+            });
+
+            // Insertar ventas y actualizar stock
+            const [salesResult, stockResult] = await Promise.all([
+                supabase.from('sales').insert(salesRecords),
+                supabase.rpc('update_multiple_stocks', {
+                    product_data: salesData.map(s => ({
+                        product_cod: s.product_cod,
+                        quantity: -s.quantity
+                    }))
+                })
+            ]);
+
+            if (salesResult.error) throw salesResult.error;
+            if (stockResult.error) {
+                console.error("Error al actualizar stock:", stockResult.error);
+                throw stockResult.error;
+            }
+
+            return salesResult.data;
+        } catch (error) {
+            console.error('Error al guardar ventas:', error);
+            throw error;
+        }
     }
 };
