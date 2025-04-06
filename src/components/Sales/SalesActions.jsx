@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaEdit, FaSave, FaTimes, FaTrash } from "react-icons/fa";
+import { FaEdit, FaSave, FaTimes, FaTrash, FaBroom } from "react-icons/fa";
 
 const SalesActions = (
     {
@@ -8,17 +8,40 @@ const SalesActions = (
         handleCancel,
         handleSave,
         handleDelete,
-        selectedSaleId
+        handleClean,
+        selectedSaleId,
+        selectedProduct,
+        showNewButton = true,
+        productExists
     }) => (
     <div className="footer">
         {!editMode ? (
-            <button
-                onClick={handleEdit}
-                className='edit-button'
-                disabled={!selectedSaleId}
-            >
-                <FaEdit />
-            </button>
+            <>
+                {showNewButton && (
+                    <button
+                        onClick={handleClean}
+                        className='clean-button'
+                    >
+                        <FaBroom />
+                    </button>
+                )}
+                <button
+                    onClick={handleEdit}
+                    className='edit-button'
+                    disabled={!selectedSaleId || !selectedProduct}
+                >
+                    <FaEdit />
+                </button>
+                {showNewButton && (
+                    <button
+                        onClick={handleSave}
+                        className='save-button'
+                        disabled={productExists}
+                    >
+                        <FaSave />
+                    </button>
+                )}
+            </>
         ) : (
             <>
                 <button
@@ -38,7 +61,7 @@ const SalesActions = (
         <button
             onClick={handleDelete}
             className='delete-button'
-            disabled={!selectedSaleId || editMode}
+            disabled={!selectedSaleId || !selectedProduct || editMode}
         >
             <FaTrash />
         </button>

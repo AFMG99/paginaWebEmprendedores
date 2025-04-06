@@ -10,7 +10,7 @@ import UserList from '../components/AdminUsers/UserList';
 import Purchases from './Purchases';
 import RegisterPurchase from '../components/Purchases/RegisterPurchase';
 import HomeCarrousel from '../components/Carrousel/HomeCarrousel';
-import RegisterSale from '../components/Sales/RegisterSale';
+import SalesManager from '../components/Sales/SalesManger';
 import CheckSale from '../components/Sales/CheckSale';
 
 const Home = () => {
@@ -47,7 +47,7 @@ const Home = () => {
                 { 
                     name: "Registrar", 
                     icon: <FaCashRegister />, 
-                    component: <RegisterSale key={reset} resetView={reset} /> 
+                    component: <SalesManager key={reset} resetView={reset} /> 
                 },
             ],
         },
@@ -70,7 +70,7 @@ const Home = () => {
 
     return (
         <div className="home-container">
-            <aside className="sidebar">
+            <aside className="sidebar col-4">
                 <MenuList
                     menuItems={menuItems}
                     onItemClick={handleItemClick}

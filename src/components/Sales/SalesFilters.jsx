@@ -36,8 +36,8 @@ const SalesFilters = (
                 onChange={(e) => setFilterPayment(e.target.value)}
             >
                 <option value="">Todos</option>
-                <option value="Contado">Contado</option>
-                <option value="Credito">Crédito</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
             </select>
         </div>
         <div className="col-5 filter-item">

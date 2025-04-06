@@ -6,15 +6,14 @@ import Swal from 'sweetalert2';
 import { userLogin } from '../service/Services';
 
 const Login = () => {
-    const [username, setUsername] = useState('')
+    const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [errorMessage, setErrorMessage] = useState('')
     const navigate = useNavigate()
 
     const handleLogin = async (e) => {
         e.preventDefault();
-
-        if (!username || !password) {
+        if (!email || !password) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Campos incompletos',
@@ -23,11 +22,9 @@ const Login = () => {
             });
             return;
         }
-
         try {
-            const user = await userLogin(username, password);
-
-            if (user && user.length > 0) { 
+            const user = await userLogin(email, password);
+            if (user) {
                 setErrorMessage('');
                 Swal.fire({
                     icon: 'success',
@@ -36,25 +33,25 @@ const Login = () => {
                     confirmButtonText: 'Aceptar'
                 }).then(() => navigate('/Principal'));
             } else {
-                setErrorMessage('Usuario o contraseña incorrectos');
+                setErrorMessage('Correo o contraseña incorrectos');
             }
         } catch (error) {
-            setErrorMessage(error.response?.data?.message || error.message);
+            setErrorMessage(error.message);
         }
-    };
+    };    
 
     const handleNewPassword = (e) => {
         e.preventDefault();
-        if (!username) {
+        if (!email) {
             Swal.fire({
                 icon: 'info',
-                title: 'Usuario requerido',
-                text: 'Por favor, digita el usuario.',
+                title: 'Correo requerido',
+                text: 'Por favor, digita el correo.',
                 confirmButtonText: 'Aceptar'
             });
             return;
         }
-        navigate('/Cambio-de-contrasena', { state: { username } });
+        navigate('/Cambio-de-contrasena', { state: { email } });
     }
 
     const handleRegister = (e) => {
@@ -81,10 +78,10 @@ const Login = () => {
                                     <input
                                         type="text"
                                         className="form-control"
-                                        id="username"
-                                        placeholder="Usuario"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
+                                        id="email"
+                                        placeholder="Correo"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
                                     />
                                 </div>
                             </div>
