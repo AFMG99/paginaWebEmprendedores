@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaBoxOpen, FaReceipt } from 'react-icons/fa';
-import RegisterProducts from './RegisterProducts';
-import RegisterSale from './RegisterSale';
-import RegisterSales from './RegisterSales';
+import RegisterProducts from './Register/RegisterProducts';
+import RegisterSale from './Register/RegisterSale';
 
 const SalesManager = ({ resetView }) => {
     const [selectedType, setSelectedType] = useState(null);

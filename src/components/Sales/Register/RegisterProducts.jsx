@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import SalesActions from './SalesActions';
-import ProductsTable from './Tables/ProductsTable';
-import ProductForm from './ProductForm';
-import { ProductService } from '../../service/Services';
+import SalesActions from '../SalesActions';
+import ProductsTable from './Products/ProductsTable';
+import ProductForm from './Products/ProductForm';
+import { ProductService } from '../../../service/Services';
 
 const RegisterProducts = () => {
     const [formData, setFormData] = useState({

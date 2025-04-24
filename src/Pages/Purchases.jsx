@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaShoppingBag, FaDollarSign } from 'react-icons/fa';
-import RegisterPurchase from '../components/Purchases/RegisterPurchase';
-import ConsultaCompras from '../components/Purchases/ConsultaCompras';
+import ManagePurchases from '../components/Purchases/ManagePurchases';
+import ConsultaCompras from '../components/Purchases/Check/ConsultaCompras';
 
 const Purchases = ({ resetView }) => {
     const [selectedOption, setSelectedOption] = useState(null);
@@ -30,7 +30,7 @@ const Purchases = ({ resetView }) => {
             ) : (
                 <>
                     {selectedOption === "consultar" && <ConsultaCompras resetView={resetView}/>}
-                    {selectedOption === "registrar" && <RegisterPurchase resetView={resetView}/>}
+                    {selectedOption === "registrar" && <ManagePurchases resetView={resetView}/>}
                 </>
             )}
         </div>

@@ -8,10 +8,11 @@ import Sales from './Sales';
 import CreateUser from '../components/AdminUsers/CreateUser';
 import UserList from '../components/AdminUsers/UserList';
 import Purchases from './Purchases';
-import RegisterPurchase from '../components/Purchases/RegisterPurchase';
+import ManagePurchases from '../components/Purchases/ManagePurchases';
 import HomeCarrousel from '../components/Carrousel/HomeCarrousel';
 import SalesManager from '../components/Sales/SalesManger';
-import CheckSale from '../components/Sales/CheckSale';
+import CheckSale from '../components/Sales/Check/CheckSale';
+import ConsultaCompras from '../components/Purchases/Check/ConsultaCompras';
 
 const Home = () => {
     const [selectedItem, setSelectedItem] = useState(null);
@@ -56,11 +57,15 @@ const Home = () => {
             icon: <FaShoppingBasket />,
             component: <Purchases resetView={reset} />,
             subItems: [
-                { name: "Consultar", icon: <FaShoppingBag /> },
+                { 
+                    name: "Consultar", 
+                    icon: <FaShoppingBag />,
+                    component: <ConsultaCompras key={reset} resetView={reset} /> 
+                },
                 {
                     name: "Registrar",
                     icon: <FaDollarSign />,
-                    component: <RegisterPurchase key={reset} resetView={reset} />
+                    component: <ManagePurchases key={reset} resetView={reset} />
                 },
             ],
         },

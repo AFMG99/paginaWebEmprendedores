@@ -7,7 +7,6 @@ const Pagination = (
         setCurrentPage,
         rowsPerPage,
         handleRowsChange,
-        filteredSales,
     }) => (
     <>
         <div className="pagination">

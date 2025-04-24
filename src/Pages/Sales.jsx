@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaClipboardList, FaCashRegister } from 'react-icons/fa';
-import CheckSale from '../components/Sales/CheckSale';
+import CheckSale from '../components/Sales/Check/CheckSale';
 import SalesManager from '../components/Sales/SalesManger';
 
 

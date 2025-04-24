@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTrash } from 'react-icons/fa';
 
 const SalesTable = ({ items, selectedItem, onSelectItem, onRemoveItem }) => {
     return (
@@ -17,7 +18,7 @@ const SalesTable = ({ items, selectedItem, onSelectItem, onRemoveItem }) => {
                 <tbody>
                     {items.length > 0 ? (
                         items.map((item, index) => (
-                            <tr 
+                            <tr
                                 key={`${item.product_cod}-${index}`}
                                 className={selectedItem?.product_cod === item.product_cod ? 'table-active' : ''}
                                 onClick={() => onSelectItem(item)}
@@ -28,14 +29,14 @@ const SalesTable = ({ items, selectedItem, onSelectItem, onRemoveItem }) => {
                                 <td>${(item.price * item.quantity).toFixed(2)}</td>
                                 <td>{item.payment_method || 'No especificado'}</td>
                                 <td>
-                                    <button 
-                                        className="btn btn-sm btn-outline-danger"
+                                    <button
+                                        className="delete-btn"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             onRemoveItem(item.product_cod);
                                         }}
                                     >
-                                        Eliminar
+                                        <FaTrash />
                                     </button>
                                 </td>
                             </tr>

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { FaEdit, FaSave, FaTrash, FaBroom } from "react-icons/fa";
-import SalesTable from './Tables/SalesTable';
-import SaleForm from './SaleForm';
-import { SalesService, ProductService } from '../../service/Services';
+import { MdCleaningServices } from "react-icons/md";
+import SalesTable from './Sales/SalesTable';
+import SaleForm from './Sales/SaleForm';
+import { SalesService, ProductService } from '../../../service/Services';
 
 const RegisterSale = () => {
     const [formData, setFormData] = useState({
@@ -101,7 +102,7 @@ const RegisterSale = () => {
         };
 
         setCurrentSaleItems(prev => [...prev, newItem]);
-        setFormData(prev => ({ ...prev, product_cod: '', price: 0, quantity: 1 }));
+        setFormData(prev => ({ ...prev, product_cod: '', price: 0, quantity: 1, payment_method: '' }));
     };
 
     const handleRemoveItem = (productCod) => {
@@ -173,8 +174,12 @@ const RegisterSale = () => {
 
             <div className="d-flex justify-content-between align-items-center mt-3">
                 <div className="d-flex gap-2">
-                    <button className="clean-button" onClick={handleClean}>
-                        <FaBroom />
+                    <button
+                        className="clean-button"
+                        onClick={handleClean}
+                        disabled={currentSaleItems.length === 0 || loading}
+                    >
+                        <MdCleaningServices />
                     </button>
                     {selectedItem && (
                         <button
@@ -192,31 +197,14 @@ const RegisterSale = () => {
                         {loading ? "..." : <FaSave />}
                     </button>
                 </div>
-                <div className="col-md-3 d-flex filter-item rounded-3 p-0 m-0">
-                    <div
-                        className="col-md-6 p-2"
-                        style={{
-                            backgroundColor: '#6200ea',
-                            border: '0.5px solid white',
-                            borderTopLeftRadius: '5px',
-                            borderBottomLeftRadius: '5px',
-                        }}
-                    >
-                        <h4
-                            className="mb-0"
-                            style={{
-                                color: 'white',
-                                fontSize: '17px',
-                                fontWeight: 'bold',
-                                textAlign: 'center'
-                            }}
-                        >Total: </h4>
-                    </div>
-                    <div className="col-md-6">
-                        <h4
-                            className="mb-0"
-                            style={{ fontSize: '17px', fontWeight: 'bold', textAlign: 'center' }}
-                        >${total.toFixed(2)}</h4>
+                <div className="col-md-3 mt-1">
+                    <div className="total-container">
+                        <div className="total-label col-md-6">
+                            <h4 className="total-text">Total:</h4>
+                        </div>
+                        <div className="total-value col-md-6">
+                            <h4 className="total-number">${total.toFixed(2)}</h4>
+                        </div>
                     </div>
                 </div>
             </div>

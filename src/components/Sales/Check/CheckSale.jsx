@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import SalesFilters from './SalesFilters';
-import SalesActions from './SalesActions';
-import Pagination from './Pagination';
-import SaleModal from '../Modals/SaleModal';
-import QueryTable from './Tables/QueryTable';
-import { SalesService } from '../../service/Services';
+import SalesActions from '../SalesActions';
+import Pagination from '../../Paginations/Pagination';
+import SaleModal from '../../Modals/SaleModal';
+import QueryTable from './QueryTable';
+import { SalesService } from '../../../service/Services';
 
 const CheckSale = () => {
     const [sales, setSales] = useState([]);

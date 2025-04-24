@@ -65,7 +65,7 @@ const SaleForm = ({
                     value={formData.payment_method}
                     onChange={onInputChange}
                     className='desplegable'
-                    disabled={loading}
+                    disabled={loading || !formData.product_cod}
                     required
                 >
                     <option value="">Método de pago *</option>
