@@ -122,6 +122,17 @@ export const ProductService = {
         return data;
     },
 
+    async getById(id) {
+        const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
     // Obtener producto por código
     async getByCode(cod) {
         const { data, error } = await supabase
@@ -229,7 +240,7 @@ export const SalesService = {
     async update(id, data) {
         const { total, ...updateData } = data;
 
-        const { data: updated, error} = await supabase
+        const { data: updated, error } = await supabase
             .from('sales')
             .update(updateData)
             .eq('id', id)
@@ -247,7 +258,7 @@ export const SalesService = {
             .eq('id', id)
             .select()
             .single();
-    
+
         if (saleError) throw saleError;
 
         if (quantityDiff !== 0) {
@@ -255,15 +266,15 @@ export const SalesService = {
                 product_id: data.product_id,
                 quantity_change: -quantityDiff
             });
-    
+
             if (stockError) {
                 console.error("Error updating stock:", stockError);
                 throw new Error("No se pudo actualizar el stock del producto");
             }
         }
-    
+
         return updatedSale;
-    },    
+    },
 
     async delete(id) {
         const { error } = await supabase
@@ -323,5 +334,290 @@ export const SalesService = {
             console.error('Error al guardar ventas:', error);
             throw error;
         }
+    }
+};
+
+export const ProviderService = {
+    // Obtener todos los proveedores
+    async getAll() {
+        const { data, error } = await supabase
+            .from('providers')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Obtener proveedor por código
+    async getByCode(cod_provider) {
+        const { data, error } = await supabase
+            .from('providers')
+            .select('*')
+            .eq('cod_provider', cod_provider)
+            .single();
+
+        if (error && !error.message.includes('No rows found')) throw error;
+        return data;
+    },
+
+    // Crear nuevo proveedor
+    async create(provider) {
+        const { data, error } = await supabase
+            .from('providers')
+            .insert([provider])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Actualizar proveedor
+    async update(id, updates) {
+        const { data, error } = await supabase
+            .from('providers')
+            .update({ ...updates, updated_at: new Date().toISOString() })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Eliminar proveedor
+    async delete(id) {
+        const { error } = await supabase
+            .from('providers')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        return true;
+    }
+};
+
+export const InputService = {
+    // Obtener todos los insumos
+    async getAll() {
+        const { data, error } = await supabase
+            .from('inputs')
+            .select(`
+                *,
+                products:product_id (*),
+                providers:provider_id (*)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Obtener insumos por producto
+    async getByProduct(productId) {
+        const { data, error } = await supabase
+            .from('inputs')
+            .select('*')
+            .eq('product_id', productId);
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Obtener insumos por proveedor
+    async getByProvider(providerId) {
+        const { data, error } = await supabase
+            .from('inputs')
+            .select('*')
+            .eq('provider_id', providerId);
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Crear nuevo insumo
+    async create(input) {
+        const { data, error } = await supabase
+            .from('inputs')
+            .insert([input])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Actualizar insumo
+    async update(id, updates) {
+        // Validación de campos requeridos
+        if (!id) throw new Error('ID de insumo es requerido');
+        if (!updates) throw new Error('Datos de actualización son requeridos');
+
+        // Preparar los datos de actualización
+        const updateData = {
+            ...updates,
+            updated_at: new Date().toISOString()
+        };
+
+        // Eliminar campos que no deberían actualizarse
+        delete updateData.id;
+        delete updateData.created_at;
+
+        const { data, error } = await supabase
+            .from('inputs')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error(`Error al actualizar insumo ${id}:`, error);
+            throw error;
+        }
+        return data;
+    },
+
+    // Método específico para asociar/desasociar productos
+    async updateProductAssociation(inputId, productId) {
+        if (!inputId) throw new Error('ID de insumo es requerido');
+
+        // productId puede ser null para desasociar
+        const { data, error } = await supabase
+            .from('inputs')
+            .update({
+                product_id: productId,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', inputId)
+            .select()
+            .single();
+
+        if (error) {
+            console.error(`Error al actualizar asociación para insumo ${inputId}:`, error);
+            throw error;
+        }
+        return data;
+    },
+
+    // Eliminar insumo
+    async delete(id) {
+        const { error } = await supabase
+            .from('inputs')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        return true;
+    },
+
+    // Actualizar stock de insumo
+    async updateStock(id, quantityChange) {
+        const inputId = Number(id);
+        const qtyChange = Number(quantityChange);
+
+        // Obtener el stock actual primero
+        const { data: current, error: fetchError } = await supabase
+            .from('inputs')
+            .select('stock')
+            .eq('id', inputId)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        // Calcular nuevo stock
+        const newStock = (current.stock || 0) + qtyChange;
+
+        // Actualizar directamente
+        const { data, error } = await supabase
+            .from('inputs')
+            .update({
+                stock: newStock,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', inputId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    }
+};
+
+export const PurchaseService = {
+    // Crear una nueva compra
+    async create(purchaseData) {
+        const { items, ...purchase } = purchaseData;
+
+        // Iniciar transacción
+        const { data: purchaseRecord, error: purchaseError } = await supabase
+            .from('purchases')
+            .insert(purchase)
+            .select()
+            .single();
+
+        if (purchaseError) throw purchaseError;
+
+        // Insertar items de la compra
+        const itemsWithPurchaseId = items.map(item => ({
+            ...item,
+            purchase_id: purchaseRecord.id
+        }));
+
+        const { error: itemsError } = await supabase
+            .from('purchase_items')
+            .insert(itemsWithPurchaseId);
+
+        if (itemsError) {
+            // Si hay error, revertir la transacción
+            await supabase
+                .from('purchases')
+                .delete()
+                .eq('id', purchaseRecord.id);
+            throw itemsError;
+        }
+
+        // Actualizar stock de insumos
+        for (const item of items) {
+            await InputService.updateStock(item.input_id, item.quantity);
+        }
+
+        return purchaseRecord;
+    },
+
+    // Obtener todas las compras
+    async getAll() {
+        const { data, error } = await supabase
+            .from('purchases')
+            .select(`
+                *,
+                provider:provider_id (*),
+                items:purchase_items (
+                    *,
+                    input:input_id (*)
+                )
+            `)
+            .order('date', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Obtener compra por ID
+    async getById(id) {
+        const { data, error } = await supabase
+            .from('purchases')
+            .select(`
+                *,
+                provider:provider_id (*),
+                items:purchase_items (
+                    *,
+                    input:input_id (*)
+            `)
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        return data;
     }
 };

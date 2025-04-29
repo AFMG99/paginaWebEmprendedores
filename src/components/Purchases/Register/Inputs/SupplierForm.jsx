@@ -3,10 +3,12 @@ import React from 'react';
 const SupplierForm = ({
     formData,
     handleChange,
-    suppliers,
-    products
+    providers,
+    products,
+    loadingProducts,
+    loadingProviders
 }) => {
-    
+
     return (
         <div className='row'>
             <div className="col-6">
@@ -15,8 +17,8 @@ const SupplierForm = ({
                         <label>Fecha</label>
                         <input
                             type="date"
-                            name="date"
-                            value={formData.date}
+                            name="created_at"
+                            value={formData.created_at}
                             onChange={handleChange}
                         />
                     </div>
@@ -25,17 +27,27 @@ const SupplierForm = ({
                     <label>Proveedor</label>
                     <select
                         className='desplegable'
-                        name="supplier"
-                        value={formData.supplier}
+                        name="provider"
+                        value={formData.provider}
                         onChange={handleChange}
+                        disabled={loadingProviders}
                     >
-                        <option value="">...</option>
-                        {suppliers.map(supplier => (
-                            <option key={supplier.id} value={supplier.id}>
-                                {supplier.name}
+                        <option value="">
+                            {loadingProviders
+                                ? "Cargando proveedores..."
+                                : providers.length === 0
+                                    ? "No hay proveedores disponibles"
+                                    : "..."}
+                        </option>
+                        {Array.isArray(providers) && providers.map(provider => (
+                            <option key={provider.id} value={provider.id}>
+                                {provider.provider_name || `Proveedor ${provider.id}`}
                             </option>
                         ))}
                     </select>
+                    {!loadingProviders && providers.length === 0 && (
+                        <p className="text-danger small">No se encontraron proveedores</p>
+                    )}
                 </div>
                 <div className='col-12 filter-item'>
                     <label>Producto</label>
@@ -44,15 +56,24 @@ const SupplierForm = ({
                         name="product"
                         value={formData.product}
                         onChange={handleChange}
-                        disabled={!formData.supplier}
+                        disabled={!formData.provider || loadingProducts}
                     >
-                        <option value="">...</option>
-                        {products.map(product => (
+                        <option value="">
+                            {loadingProducts
+                                ? "Cargando productos..."
+                                : products.length === 0
+                                    ? "No hay productos disponibles"
+                                    : "..."}
+                        </option>
+                        {Array.isArray(products) && products.map(product => (
                             <option key={product.id} value={product.id}>
-                                {product.name}
+                                {product.product || `Producto ${product.id}`}
                             </option>
                         ))}
                     </select>
+                    {!loadingProducts && products.length === 0 && (
+                        <p className="text-danger small">No se encontraron productos</p>
+                    )}
                 </div>
             </div>
             <div className='col-6'>
@@ -65,7 +86,7 @@ const SupplierForm = ({
                             name="paymentType"
                             value={formData.paymentType}
                             onChange={handleChange}
-                            disabled={!formData.product || !formData.supplier}
+                            disabled={!formData.product || !formData.provider}
                         >
                             <option value="">...</option>
                             <option value="Contado">Contado</option>
@@ -85,8 +106,8 @@ const SupplierForm = ({
                     </div>
                     <div className='col-3 filter-item'>
                         <label>Vence</label>
-                        <input 
-                            type="date" 
+                        <input
+                            type="date"
                             name="dueDate"
                             value={formData.dueDate}
                             onChange={handleChange}

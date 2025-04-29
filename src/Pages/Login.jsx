@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import '../assets/css/styles.css';
-import imagen from '../../src/assets/img/Logo_web.png';
+import imagen from '../../src/assets/img/LogoRoad.jpeg';
 import Swal from 'sweetalert2';
 import { userLogin } from '../service/Services';
 
@@ -68,7 +68,7 @@ const Login = () => {
 
                 <div className="col-md-6 d-flex align-items-center justify-content-center div">
                     <div className="login-box">
-                        <h2 className="text-center text-titulo">Pagina de proyecto de aula</h2>
+                        <h2 className="text-center text-titulo">ROAD</h2>
 
                         <form className='form' onSubmit={handleLogin}>
                             <div className="mb-3 user">

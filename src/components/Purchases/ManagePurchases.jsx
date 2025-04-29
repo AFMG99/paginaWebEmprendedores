@@ -22,16 +22,16 @@ const RegisterPurchase = ({ resetView }) => {
                     <button onClick={() => setSelectedType('proveedor')}>
                         <FaUserTie className="icon" /> Registro de Proveedor
                     </button>
-                    <button onClick={() => setSelectedType('costos')}>
+                    {/* <button onClick={() => setSelectedType('costos')}>
                         <FaBuilding className="icon" /> Costos y Gastos
-                    </button>
+                    </button> */}
                 </div>
             )}
 
             <div className="purchase-content full-width">
                 {selectedType === 'insumos' && <RegisterInputs />}
                 {selectedType === 'proveedor' && <ProviderRegister />}
-                {selectedType === 'costos' && <SupplyPurchase />}
+                {/* {selectedType === 'costos' && <RegisterCosts />} */}
             </div>
         </div>
     )

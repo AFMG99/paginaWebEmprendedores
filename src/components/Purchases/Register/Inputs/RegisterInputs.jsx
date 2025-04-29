@@ -3,34 +3,17 @@ import Swal from 'sweetalert2';
 import SupplierForm from './SupplierForm';
 import InputsTable from './InputsTable';
 import PurchasesActions from '../../PurchasesActions';
+import { ProductService, ProviderService, InputService } from '../../../../service/Services';
+import supabase from '../../../../db/supabaseClient';
 
 const RegisterInputs = () => {
-    // Datos quemados de proveedores
-    const mockSuppliers = [
-        { id: 1, name: "Proveedor A" },
-        { id: 2, name: "Proveedor B" },
-        { id: 3, name: "Proveedor C" }
-    ];
-
-    // Datos quemados de productos
-    const mockProducts = [
-        { id: 1, name: 'Producto X' },
-        { id: 2, name: 'Producto Y' },
-        { id: 3, name: 'Producto Z' },
-    ];
-
-    // Datos quemados de insumos
-    const mockInputs = [
-        { id: 1, name: "Insumo 1", price: 10.50, productId: 1 },
-        { id: 2, name: "Insumo 2", price: 15.75, productId: 1 },
-        { id: 3, name: "Insumo 3", price: 8.20, productId: 2 },
-        { id: 4, name: "Insumo 4", price: 12.30, productId: 2 },
-        { id: 5, name: "Insumo 5", price: 9.50, productId: 3 }
-    ];
-
+    const [providers, setProviders] = useState([]);
+    const [loadingProviders, setLoadingProviders] = useState(false);
+    const [products, setProducts] = useState([]);
+    const [loadingProducts, setLoadingProducts] = useState(false);
     const [formData, setFormData] = useState({
-        date: new Date().toISOString().split('T')[0],
-        supplier: '',
+        created_at: new Date().toISOString().split('T')[0],
+        provider: '',
         product: '',
         paymentType: '',
         paymentMethod: '',
@@ -38,7 +21,7 @@ const RegisterInputs = () => {
         dueDate: '',
     });
 
-    const [allInputs, setAllInputs] = useState(mockInputs);
+    const [allInputs, setAllInputs] = useState([]);
     const [filteredInputs, setFilteredInputs] = useState([]);
     const [selectedInputs, setSelectedInputs] = useState([]);
     const [editingCell, setEditingCell] = useState({ row: null, field: null });
@@ -52,31 +35,119 @@ const RegisterInputs = () => {
         return sum + (item.quantity * item.price);
     }, 0);
 
+    // Cargar proveedores al montar el componente
     useEffect(() => {
-        if (formData.date) {
+        const fetchProviders = async () => {
+            setLoadingProviders(true);
+            try {
+                const providersData = await ProviderService.getAll();
+                setProviders(providersData || []);
+            } catch (error) {
+                console.error("Error al cargar proveedores:", error);
+                Swal.fire("Error", "No se pudieron cargar los proveedores", "error");
+                setProviders([]);
+            } finally {
+                setLoadingProviders(false);
+            }
+        };
+
+        fetchProviders();
+    }, []);
+
+    // Cargar productos al montar el componente
+    useEffect(() => {
+        const fetchProducts = async () => {
+            setLoadingProducts(true);
+            try {
+                const productsData = await ProductService.getAll();
+                setProducts(productsData || []);
+            } catch (error) {
+                console.error("Error al cargar productos:", error);
+                Swal.fire("Error", "No se pudieron cargar los productos", "error");
+                setProducts([]);
+            } finally {
+                setLoadingProducts(false);
+            }
+        };
+
+        fetchProducts();
+    }, []);
+
+    // Cargar insumos cuando cambia el proveedor o producto
+    useEffect(() => {
+        const fetchInputs = async () => {
+            try {
+                if (formData.product) {
+                    // Primero intentamos obtener insumos por producto
+                    const inputsByProduct = await InputService.getByProduct(Number(formData.product));
+
+                    if (inputsByProduct.length === 0 && formData.provider) {
+                        // Si no hay insumos para el producto, obtenemos insumos del proveedor
+                        const inputsByProvider = await InputService.getByProvider(Number(formData.provider));
+                        setAllInputs(inputsByProvider);
+                    } else {
+                        setAllInputs(inputsByProduct);
+                    }
+                } else if (formData.provider) {
+                    // Si solo hay proveedor seleccionado
+                    const inputsByProvider = await InputService.getByProvider(Number(formData.provider));
+                    setAllInputs(inputsByProvider);
+                } else {
+                    setAllInputs([]);
+                }
+            } catch (error) {
+                console.error("Error al cargar insumos:", error);
+                Swal.fire("Error", "No se pudieron cargar los insumos", "error");
+                setAllInputs([]);
+            }
+        };
+
+        fetchInputs();
+    }, [formData.product, formData.provider]);
+
+    // Filtrar insumos para mostrar en la tabla
+    useEffect(() => {
+        if (formData.product) {
+            const filteredByProduct = allInputs.filter(input => input.product_id === Number(formData.product));
+
+            if (filteredByProduct.length === 0 && formData.provider) {
+                const providerInputs = allInputs.filter(input => input.provider_id === Number(formData.provider));
+                setFilteredInputs(providerInputs);
+            } else {
+                setFilteredInputs(filteredByProduct);
+            }
+        } else {
+            setFilteredInputs([]);
+        }
+    }, [formData.product, formData.provider, allInputs]);
+
+    // Calcular fecha de vencimiento
+    useEffect(() => {
+        if (formData.created_at) {
             const due = calculateDueDate(formData.term);
             setFormData(prev => ({
                 ...prev,
                 dueDate: due
             }));
         }
-    }, [formData.term, formData.date]);
+    }, [formData.term, formData.created_at]);
 
-    useEffect(() => {
-        if (formData.product) {
-            const filtered = allInputs.filter(input => input.productId === Number(formData.product));
-            setFilteredInputs(filtered);
-        } else {
-            setFilteredInputs([]);
+    const calculateDueDate = (days) => {
+        if (!formData.created_at) return '';
+        const created_at = new Date(formData.created_at);
+        if (!days || days <= 0) {
+            return created_at.toISOString().split('T')[0];
         }
-    }, [formData.product, allInputs]);
+        created_at.setDate(created_at.getDate() + Number(days));
+        return created_at.toISOString().split('T')[0];
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
 
         const numericFields = ['term'];
-        const processedValue = numericFields.includes(name) 
-            ? Number(value) || 0 
+        const processedValue = numericFields.includes(name)
+            ? Number(value) || 0
             : value;
 
         setFormData(prev => ({
@@ -85,13 +156,9 @@ const RegisterInputs = () => {
             ...(name === 'term' && {
                 dueDate: calculateDueDate(value)
             }),
-            // Limpiar insumos seleccionados si cambia el producto
-            ...(name === 'product' && {
-                selectedInputs: []
-            })
         }));
 
-        // Si cambia el producto, limpiamos los insumos seleccionados
+        // Limpiar insumos seleccionados si cambia el producto
         if (name === 'product') {
             setSelectedInputs([]);
             setNewInputRow({
@@ -100,20 +167,6 @@ const RegisterInputs = () => {
                 price: 0,
             });
         }
-    };
-
-
-    const calculateDueDate = (days) => {
-        if (!formData.date) return '';
-    
-        const date = new Date(formData.date);
-    
-        if (!days || days <= 0) {
-            return date.toISOString().split('T')[0];
-        }
-    
-        date.setDate(date.getDate() + Number(days));
-        return date.toISOString().split('T')[0];
     };
 
     const handleCellDoubleClick = (rowIndex, field) => {
@@ -142,12 +195,11 @@ const RegisterInputs = () => {
                     price: filteredInputs.find(i => i.id === Number(value))?.price || 0
                 })
             };
-            
+
             if (field === 'quantity' || field === 'price' || field === 'input') {
-                updatedInputs[rowIndex].subtotal = 
+                updatedInputs[rowIndex].subtotal =
                     updatedInputs[rowIndex].quantity * updatedInputs[rowIndex].price;
             }
-            
             setSelectedInputs(updatedInputs);
         }
     };
@@ -166,7 +218,9 @@ const RegisterInputs = () => {
             name: selected.name,
             quantity: newInputRow.quantity,
             price: newInputRow.price,
-            subtotal: newInputRow.quantity * newInputRow.price
+            subtotal: newInputRow.quantity * newInputRow.price,
+            product_id: Number(formData.product),
+            provider_id: selected.provider_id
         };
 
         setSelectedInputs(prev => [...prev, inputToAdd]);
@@ -186,9 +240,9 @@ const RegisterInputs = () => {
 
     const handleClean = () => {
         setFormData({
-            date: new Date().toISOString().split('T')[0],
-            supplier: '',
-            category: '',
+            created_at: new Date().toISOString().split('T')[0],
+            provider: '',
+            product: '',
             paymentType: '',
             paymentMethod: '',
             term: 0,
@@ -207,47 +261,101 @@ const RegisterInputs = () => {
         if (!validateForm()) return;
 
         try {
-            const purchaseData = {
-                ...formData,
-                items: selectedInputs,
-                total: totalAmount
-            };
+            // 1. Crear la compra
+            const { data: purchase, error: purchaseError } = await supabase
+                .from('purchases')
+                .insert([{
+                    provider_id: Number(formData.provider),
+                    product_id: Number(formData.product),
+                    payment_type: formData.paymentType,
+                    payment_method: formData.paymentMethod,
+                    term: formData.term,
+                    due_date: formData.dueDate,
+                    total: totalAmount,
+                    created_at: new Date().toISOString()
+                }])
+                .select()
+                .single();
 
-            Swal.fire("Guardado", "Compra registrada correctamente", "success");
+            if (purchaseError) throw purchaseError;
+
+            // 2. Crear los items de la compra
+            const purchaseItems = selectedInputs.map(input => ({
+                purchase_id: purchase.id,
+                input_id: input.id,
+                quantity: input.quantity,
+                price: input.price,
+                subtotal: input.subtotal,
+                product_id: Number(formData.product)
+            }));
+
+            const { error: itemsError } = await supabase
+                .from('purchase_items')
+                .insert(purchaseItems);
+
+            if (itemsError) throw itemsError;
+
+            // 3. Actualizar el stock de los insumos
+            // await Promise.all(selectedInputs.map(input =>
+            //     InputService.updateStock(input.id, input.quantity)
+            // ));
+
+            // 4. Asociar insumos al producto (versión mejorada)
+            const updatePromises = selectedInputs.map(async (input) => {
+                // Verificar si el insumo ya estaba asociado a este producto
+                const currentInput = allInputs.find(i => i.id === input.id);
+
+                if (!currentInput || currentInput.product_id !== Number(formData.product)) {
+                    try {
+                        await InputService.updateProductAssociation(
+                            input.id,
+                            Number(formData.product)
+                        );
+                        console.log(`Insumo ${input.id} asociado correctamente al producto ${formData.product}`);
+                    } catch (error) {
+                        console.error(`Error al asociar insumo ${input.id}:`, error);
+                        // Continuar a pesar del error para no bloquear toda la operación
+                    }
+                }
+            });
+
+            // await Promise.all(inputsToUpdate.map(input =>
+            //     InputService.update(input.id, { product_id: Number(formData.product) })
+            // ));
+
+            Swal.fire("Éxito", "Compra registrada correctamente", "success");
             handleClean();
         } catch (error) {
             console.error("Error al guardar:", error);
-            showError("Error al guardar la compra", error);
+            Swal.fire("Error", "No se pudo guardar la compra", "error");
         }
     };
 
     const validateForm = () => {
-        if (!formData.supplier || selectedInputs.length === 0) {
+        if (!formData.provider || selectedInputs.length === 0) {
             Swal.fire("Error", "Complete los datos requeridos y agregue al menos un insumo", "error");
             return false;
         }
         return true;
     };
 
-    const showError = (message, error) => {
-        Swal.fire("Error", message, "error");
-        console.error(error);
-    };
-
     const isFormComplete = () => {
-        return formData.supplier && formData.product && formData.paymentType && formData.paymentMethod;
+        return formData.provider && formData.product && formData.paymentType && formData.paymentMethod;
     };
 
     return (
         <div>
             <h2 className='text-center text-titulo'>Registro de Insumos</h2>
+
             <SupplierForm
                 formData={formData}
                 handleChange={handleChange}
-                suppliers={mockSuppliers}
-                products={mockProducts}
+                providers={providers}
+                loadingProviders={loadingProviders}
+                products={products}
+                loadingProducts={loadingProducts}
             />
-            
+
             <InputsTable
                 inputs={filteredInputs}
                 selectedInputs={selectedInputs}
@@ -258,13 +366,22 @@ const RegisterInputs = () => {
                 handleAddInput={handleAddInput}
                 handleRemoveInput={handleRemoveInput}
                 isFormComplete={isFormComplete()}
+                currentProductId={formData.product}
             />
-            
-            <div className="total-section">
-                <span>Total de la compra:</span>
-                <span>${totalAmount.toFixed(2)}</span>
+
+            <div className='d-flex justify-content-end'>
+                <div className="col-4 mt-1">
+                    <div className="total-container">
+                        <div className="total-label col-7">
+                            <h4 className="total-text">Total:</h4>
+                        </div>
+                        <div className="total-value col-5">
+                            <h4 className="total-number">${totalAmount.toFixed(2)}</h4>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
+
             <PurchasesActions
                 handleClean={handleClean}
                 handleSave={handleSave}

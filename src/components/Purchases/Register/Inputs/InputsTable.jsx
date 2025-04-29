@@ -10,7 +10,8 @@ const InputsTable = ({
     handleCellChange,
     handleAddInput,
     handleRemoveInput,
-    isFormComplete
+    isFormComplete,
+    currentProductId
 }) => {
     const renderCell = (rowIndex, field, value, isNewRow = false) => {
         const isEditing = editingCell.row === rowIndex && editingCell.field === field;
@@ -35,6 +36,7 @@ const InputsTable = ({
                         {inputs.map(input => (
                             <option key={input.id} value={input.id}>
                                 {input.name} (${input.price.toFixed(2)})
+                                {input.product_id !== Number(currentProductId) && " - Del proveedor"}
                             </option>
                         ))}
                     </select>
