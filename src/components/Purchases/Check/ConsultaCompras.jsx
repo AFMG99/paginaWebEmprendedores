@@ -4,7 +4,7 @@ import PurchasesFilters from './PurchasesFilters';
 import PurchasesActions from '../PurchasesActions';
 import Pagination from '../../Paginations/Pagination';
 import PurchasesTable from './PurchasesTable';
-// import { PurchasesService } from '../../service/Services';
+import { PurchaseService } from '../../../service/Services';
 
 const PurchaseList = () => {
     const [purchases, setPurchases] = useState([]);
@@ -26,47 +26,8 @@ const PurchaseList = () => {
     const fetchPurchases = async () => {
         setLoading(true);
         try {
-            // En una implementación real, usaríamos PurchasesService.getAll()
-            // Para este ejemplo, usamos datos quemados
-            const purchasesData = [
-                {
-                    id: 1,
-                    product_name: "Salchichas",
-                    supplier: "Zenu",
-                    quantity: 5,
-                    unit_price: 1200.50,
-                    date: "2023-05-15",
-                    status: "Transferencia"
-                },
-                {
-                    id: 2,
-                    product_name: "Panes",
-                    supplier: "Bimbo",
-                    quantity: 20,
-                    unit_price: 25.99,
-                    date: "2023-06-02",
-                    status: "Efectivo"
-                },
-                {
-                    id: 3,
-                    product_name: "Gaseosas",
-                    supplier: "Postobon",
-                    quantity: 10,
-                    unit_price: 89.90,
-                    date: "2023-06-10",
-                    status: "Transferencia"
-                },
-                {
-                    id: 4,
-                    product_name: "Servilletas",
-                    supplier: "Familia",
-                    quantity: 8,
-                    unit_price: 199.99,
-                    date: "2023-06-18",
-                    status: "Efectivo"
-                }
-            ];
-            setPurchases(purchasesData);
+            const purchasesData = await PurchaseService.getAll();
+            setPurchases(purchasesData || []);
         } catch (error) {
             console.error('Error fetching purchases:', error);
             Swal.fire("Error", "No se pudieron cargar las compras", "error");
@@ -93,18 +54,36 @@ const PurchaseList = () => {
         setLoading(true);
         try {
             const purchaseToUpdate = purchases.find(p => p.id === selectedPurchaseId);
-            const updateData = {
-                product_name: purchaseToUpdate.product_name,
-                supplier: purchaseToUpdate.supplier,
-                quantity: purchaseToUpdate.quantity,
-                unit_price: purchaseToUpdate.unit_price,
-                date: purchaseToUpdate.date,
-                status: purchaseToUpdate.status
+            const purchaseData = {
+                payment_method: purchaseToUpdate.payment_method,
             };
 
-            // En una implementación real:
-            // await PurchasesService.update(selectedPurchaseId, updateData);
-            
+            const providerData = {
+                provider_name: purchaseToUpdate.product_name
+            };
+
+            const itemsData = purchaseToUpdate.items.map(item => ({
+                input_id: item.input_id,
+                quantity: item.quantity,
+                price: item.price
+            }));
+
+            // Actualizar todo
+            const updatedPurchase = await PurchaseService.updateComplete(
+                selectedPurchaseId,
+                purchaseData,
+                providerData,
+                itemsData
+            );
+
+            // Actualizar el estado con los nuevos datos
+            setPurchases(purchases.map(p =>
+                p.id === selectedPurchaseId ? {
+                    ...updatedPurchase,
+                    showItems: p.showItems
+                } : p
+            ));
+
             Swal.fire("Guardado", "Los cambios han sido guardados", "success");
             setEditMode(false);
             fetchPurchases();
@@ -132,14 +111,11 @@ const PurchaseList = () => {
         if (result.isConfirmed) {
             setLoading(true);
             try {
-                // En una implementación real:
-                // await PurchasesService.delete(selectedPurchaseId);
-                
-                // Para este ejemplo, filtramos localmente
-                setPurchases(purchases.filter(p => p.id !== selectedPurchaseId));
+                await PurchaseService.delete(selectedPurchaseId);
                 Swal.fire('Eliminado', 'Compra eliminada con éxito.', 'success');
                 setSelectedPurchaseId(null);
                 setEditMode(false);
+                fetchPurchases();
             } catch (error) {
                 console.error("Error deleting purchase:", error);
                 Swal.fire("Error", "No se pudo eliminar la compra", "error");
@@ -150,7 +126,7 @@ const PurchaseList = () => {
     };
 
     const handleChange = (field, value) => {
-        setPurchases(purchases.map(purchase => 
+        setPurchases(purchases.map(purchase =>
             purchase.id === selectedPurchaseId ? { ...purchase, [field]: value } : purchase
         ));
     };
@@ -160,10 +136,10 @@ const PurchaseList = () => {
         const fromDate = startDate ? new Date(startDate) : null;
         const toDate = endDate ? new Date(endDate) : null;
         const matchDate = (!fromDate || purchaseDate >= fromDate) && (!toDate || purchaseDate <= toDate);
-        const matchStatus = filterStatus ? purchase.status.toLowerCase() === filterStatus.toLowerCase() : true;
-        const matchProduct = filterProduct ? 
-            purchase.product_name.toLowerCase().includes(filterProduct.toLowerCase()) || 
-            purchase.supplier.toLowerCase().includes(filterProduct.toLowerCase()) : true;
+        const matchStatus = filterStatus ? purchase.payment_method.toLowerCase() === filterStatus.toLowerCase() : true;
+        const matchProduct = filterProduct ?
+            purchase.product_name.toLowerCase().includes(filterProduct.toLowerCase()) ||
+            purchase.provider_name.toLowerCase().includes(filterProduct.toLowerCase()) : true;
         return matchDate && matchStatus && matchProduct;
     });
 
@@ -195,7 +171,7 @@ const PurchaseList = () => {
     return (
         <div className="sales-container">
             <h2 className="text-center text-titulo">Lista de Compras</h2>
-            
+
             <PurchasesFilters
                 startDate={startDate}
                 setStartDate={setStartDate}
@@ -206,7 +182,7 @@ const PurchaseList = () => {
                 filterProduct={filterProduct}
                 setFilterProduct={setFilterProduct}
             />
-            
+
             {loading ? (
                 <div className="text-center py-4">Cargando...</div>
             ) : (
@@ -233,7 +209,7 @@ const PurchaseList = () => {
                     )}
                 </>
             )}
-            
+
             <PurchasesActions
                 editMode={editMode}
                 handleEdit={handleEdit}

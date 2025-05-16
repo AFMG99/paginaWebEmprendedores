@@ -3,8 +3,7 @@ import Swal from 'sweetalert2';
 import SupplierForm from './SupplierForm';
 import InputsTable from './InputsTable';
 import PurchasesActions from '../../PurchasesActions';
-import { ProductService, ProviderService, InputService } from '../../../../service/Services';
-import supabase from '../../../../db/supabaseClient';
+import { ProductService, ProviderService, InputService, PurchaseService } from '../../../../service/Services';
 
 const RegisterInputs = () => {
     const [providers, setProviders] = useState([]);
@@ -73,53 +72,31 @@ const RegisterInputs = () => {
         fetchProducts();
     }, []);
 
-    // Cargar insumos cuando cambia el proveedor o producto
+    // Reemplaza el useEffect que carga los insumos con este:
     useEffect(() => {
         const fetchInputs = async () => {
             try {
-                if (formData.product) {
-                    // Primero intentamos obtener insumos por producto
-                    const inputsByProduct = await InputService.getByProduct(Number(formData.product));
-
-                    if (inputsByProduct.length === 0 && formData.provider) {
-                        // Si no hay insumos para el producto, obtenemos insumos del proveedor
-                        const inputsByProvider = await InputService.getByProvider(Number(formData.provider));
-                        setAllInputs(inputsByProvider);
-                    } else {
-                        setAllInputs(inputsByProduct);
-                    }
-                } else if (formData.provider) {
-                    // Si solo hay proveedor seleccionado
-                    const inputsByProvider = await InputService.getByProvider(Number(formData.provider));
-                    setAllInputs(inputsByProvider);
+                if (formData.provider) {
+                    const inputsData = await InputService.getInputsByProviderWithAssociation(
+                        Number(formData.provider),
+                        formData.product ? Number(formData.product) : null
+                    );
+                    setAllInputs(inputsData);
+                    setFilteredInputs(inputsData);
                 } else {
                     setAllInputs([]);
+                    setFilteredInputs([]);
                 }
             } catch (error) {
                 console.error("Error al cargar insumos:", error);
                 Swal.fire("Error", "No se pudieron cargar los insumos", "error");
                 setAllInputs([]);
+                setFilteredInputs([]);
             }
         };
 
         fetchInputs();
-    }, [formData.product, formData.provider]);
-
-    // Filtrar insumos para mostrar en la tabla
-    useEffect(() => {
-        if (formData.product) {
-            const filteredByProduct = allInputs.filter(input => input.product_id === Number(formData.product));
-
-            if (filteredByProduct.length === 0 && formData.provider) {
-                const providerInputs = allInputs.filter(input => input.provider_id === Number(formData.provider));
-                setFilteredInputs(providerInputs);
-            } else {
-                setFilteredInputs(filteredByProduct);
-            }
-        } else {
-            setFilteredInputs([]);
-        }
-    }, [formData.product, formData.provider, allInputs]);
+    }, [formData.provider, formData.product]);
 
     // Calcular fecha de vencimiento
     useEffect(() => {
@@ -261,27 +238,18 @@ const RegisterInputs = () => {
         if (!validateForm()) return;
 
         try {
-            // 1. Crear la compra
-            const { data: purchase, error: purchaseError } = await supabase
-                .from('purchases')
-                .insert([{
-                    provider_id: Number(formData.provider),
-                    product_id: Number(formData.product),
-                    payment_type: formData.paymentType,
-                    payment_method: formData.paymentMethod,
-                    term: formData.term,
-                    due_date: formData.dueDate,
-                    total: totalAmount,
-                    created_at: new Date().toISOString()
-                }])
-                .select()
-                .single();
+            const purchaseData = {
+                provider_id: Number(formData.provider),
+                product_id: Number(formData.product),
+                payment_type: formData.paymentType,
+                payment_method: formData.paymentMethod,
+                term: formData.term,
+                due_date: formData.dueDate,
+                total: totalAmount,
+                created_at: new Date().toISOString()
+            };
 
-            if (purchaseError) throw purchaseError;
-
-            // 2. Crear los items de la compra
             const purchaseItems = selectedInputs.map(input => ({
-                purchase_id: purchase.id,
                 input_id: input.id,
                 quantity: input.quantity,
                 price: input.price,
@@ -289,39 +257,7 @@ const RegisterInputs = () => {
                 product_id: Number(formData.product)
             }));
 
-            const { error: itemsError } = await supabase
-                .from('purchase_items')
-                .insert(purchaseItems);
-
-            if (itemsError) throw itemsError;
-
-            // 3. Actualizar el stock de los insumos
-            // await Promise.all(selectedInputs.map(input =>
-            //     InputService.updateStock(input.id, input.quantity)
-            // ));
-
-            // 4. Asociar insumos al producto (versión mejorada)
-            const updatePromises = selectedInputs.map(async (input) => {
-                // Verificar si el insumo ya estaba asociado a este producto
-                const currentInput = allInputs.find(i => i.id === input.id);
-
-                if (!currentInput || currentInput.product_id !== Number(formData.product)) {
-                    try {
-                        await InputService.updateProductAssociation(
-                            input.id,
-                            Number(formData.product)
-                        );
-                        console.log(`Insumo ${input.id} asociado correctamente al producto ${formData.product}`);
-                    } catch (error) {
-                        console.error(`Error al asociar insumo ${input.id}:`, error);
-                        // Continuar a pesar del error para no bloquear toda la operación
-                    }
-                }
-            });
-
-            // await Promise.all(inputsToUpdate.map(input =>
-            //     InputService.update(input.id, { product_id: Number(formData.product) })
-            // ));
+            await PurchaseService.createCompletePurchase(purchaseData, purchaseItems, allInputs);
 
             Swal.fire("Éxito", "Compra registrada correctamente", "success");
             handleClean();

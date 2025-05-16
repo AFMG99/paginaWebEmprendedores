@@ -75,21 +75,22 @@ const ProviderRegister = () => {
                     address: foundProvider.address,
                     phone: foundProvider.phone,
                     email: foundProvider.email,
-                    created_at: foundProvider.created_at
+                    created_at: foundProvider.created_at || new Date().toISOString().split('T')[0]
                 });
                 setCurrentProviderId(foundProvider.id);
                 setEditMode(true);
                 fetchProviderInputs(foundProvider.id);
             } else if (formData.cod_provider?.length >= 3) {
-                setFormData({
-                    provider_name: '',
-                    state: 'Activo',
-                    city: '',
-                    address: '',
-                    phone: '',
-                    email: '',
-                    created_at: new Date().toISOString().split('T')[0]
-                });
+                setFormData(prev => ({
+                    ...prev,
+                    provider_name: prev.provider_name,
+                    state: prev.state,
+                    city: prev.city,
+                    address: prev.address,
+                    phone: prev.phone,
+                    email: prev.email,
+                    created_at: prev.created_at
+                }));
                 setCurrentProviderId(null);
                 setEditMode(false);
                 setInputs([]);
@@ -115,7 +116,7 @@ const ProviderRegister = () => {
         setSearchTriggered(false);
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: value || ''
         }));
     };
 

@@ -15,7 +15,7 @@ const ProviderForm = ({
                         <input
                             type="text"
                             name="cod_provider"
-                            value={formData.cod_provider}
+                            value={formData.cod_provider || ''}
                             onChange={handleChange}
                             autoComplete="off"
                             onBlur={() => handleBlur('cod_provider')}

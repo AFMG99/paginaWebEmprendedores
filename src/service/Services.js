@@ -511,6 +511,30 @@ export const InputService = {
         return true;
     },
 
+    // Método para obtener insumos marcando los asociados al producto
+    async getInputsByProviderWithAssociation(providerId, productId = null) {
+        const { data, error } = await supabase
+            .from('inputs')
+            .select(`
+            *,
+            products:product_id (*),
+            providers:provider_id (*)
+        `)
+            .eq('provider_id', providerId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (productId) {
+            return data.map(input => ({
+                ...input,
+                isAssociated: input.product_id === productId
+            }));
+        }
+
+        return data;
+    },
+
     // Actualizar stock de insumo
     async updateStock(id, quantityChange) {
         const inputId = Number(id);
@@ -545,79 +569,256 @@ export const InputService = {
 };
 
 export const PurchaseService = {
-    // Crear una nueva compra
-    async create(purchaseData) {
-        const { items, ...purchase } = purchaseData;
+    async getAll() {
+        try {
+            // Consulta principal con todas las relaciones necesarias
+            const { data: purchases, error } = await supabase
+                .from('purchases')
+                .select(`
+                    *,
+                    provider:provider_id(id, provider_name),
+                    product:product_id(id, product),
+                    purchase_items: purchase_items(
+                        *,
+                        input:input_id(
+                            id,
+                            name,
+                            price
+                        )
+                    )
+                `)
+                .order('created_at', { ascending: false });
 
-        // Iniciar transacción
-        const { data: purchaseRecord, error: purchaseError } = await supabase
-            .from('purchases')
-            .insert(purchase)
-            .select()
-            .single();
+            if (error) throw error;
+            if (!purchases) return [];
 
-        if (purchaseError) throw purchaseError;
+            return purchases.map(purchase => ({
+                ...purchases,
+                id: purchase.id,
+                provider_id: purchase.provider_id,
+                provider_name: purchase.provider?.provider_name || 'Sin proveedor',
+                product_id: purchase.product_id,
+                product_name: purchase.product?.product || 'Sin producto',
+                payment_method: purchase.payment_method,
+                term: purchase.term,
+                date: purchase.created_at,
+                total: purchase.total,
+                items: purchase.purchase_items?.map(item => ({
+                    id: item.id,
+                    input_id: item.input_id,
+                    input_name: item.input?.name || 'Sin nombre',
+                    quantity: item.quantity,
+                    price: item.price,
+                    subtotal: item.subtotal,
+                })) || []
+            }));
 
-        // Insertar items de la compra
-        const itemsWithPurchaseId = items.map(item => ({
-            ...item,
-            purchase_id: purchaseRecord.id
-        }));
+        } catch (error) {
+            console.error("Error fetching purchases:", error);
+            throw error;
+        }
+    },
 
-        const { error: itemsError } = await supabase
-            .from('purchase_items')
-            .insert(itemsWithPurchaseId);
+    async getById(id) {
+        try {
+            const { data, error } = await supabase
+                .from('purchases')
+                .select(`
+                    *,
+                    providers (*),
+                    products (*),
+                    purchase_items (
+                        *,
+                        inputs (*)
+                    )
+                `)
+                .eq('id', id)
+                .single();
 
-        if (itemsError) {
-            // Si hay error, revertir la transacción
-            await supabase
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error("Error fetching purchase:", error);
+            throw error;
+        }
+    },
+
+    async updateComplete(purchaseId, purchaseData, providerData, itemsData) {
+        try {
+            const operations = [];
+
+            // Actualizar datos principales de la compra
+            operations.push(
+                supabase.from('purchases')
+                    .update({
+                        payment_method: purchaseData.payment_method,
+                    })
+                    .eq('id', purchaseId)
+            )
+
+            // Actualizar datos de proveedor si hay cambios
+            if (providerData && providerData.id) {
+                operations.push(
+                    supabase.from('providers')
+                        .update({
+                            provider_name: providerData.provider_name
+                        })
+                        .eq('id', providerData.id)
+                )
+            }
+
+            // Manejar los items
+            if (itemsData && itemsData.length > 0) {
+                const { data: existingItems, error: itemsError } = await supabase
+                    .from('purchase_items')
+                    .select('*')
+                    .eq('purchase_id', purchaseId);
+
+                if (itemsError) throw itemsError;
+
+                // Separar items para actualizar
+                const itemsToUpdate = itemsData.filter(item => item.id);
+
+                // Operaciones de actualización
+                for (const item of itemsToUpdate) {
+                    operations.push(
+                        supabase.from('purchase_items')
+                            .update({
+                                input_id: item.input_id,
+                                quantity: item.quantity,
+                                price: item.price,
+                                subtotal: item.quantity * item.price
+                            })
+                            .eq('id', item.id)
+                    );
+                }
+            }
+
+            // Ejecutar todas las operaciones
+            const results = await Promise.all(operations);
+
+            // Verificar errores
+            for (const result of results) {
+                if (result.error) throw result.error;
+            }
+
+            // Obtener y devolver los datos actualizados
+            const { data: updatedPurchase, error: fetchError } = await supabase
+                .from('purchases')
+                .select(`
+                    *,
+                    provider:provider_id(id, provider_name),
+                    purchase_items: purchase_items(
+                        *,
+                        input:input_id(
+                            id,
+                            name,
+                            price
+                        )
+                    )
+                `)
+                .eq('id', purchaseId)
+                .single()
+
+            if (fetchError) throw fetchError;
+
+            return updatedPurchase;
+        } catch (error) {
+            console.error("Error updating complete purchase:", error);
+            throw error;
+        }
+    },
+
+    async delete(id) {
+        try {
+            // Primero eliminamos los items asociados
+            const { error: itemsError } = await supabase
+                .from('purchase_items')
+                .delete()
+                .eq('purchase_id', id);
+
+            if (itemsError) throw itemsError;
+
+            // Luego eliminamos la compra
+            const { error } = await supabase
                 .from('purchases')
                 .delete()
-                .eq('id', purchaseRecord.id);
-            throw itemsError;
-        }
+                .eq('id', id);
 
-        // Actualizar stock de insumos
-        for (const item of items) {
-            await InputService.updateStock(item.input_id, item.quantity);
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            console.error("Error deleting purchase:", error);
+            throw error;
         }
-
-        return purchaseRecord;
     },
 
-    // Obtener todas las compras
-    async getAll() {
-        const { data, error } = await supabase
-            .from('purchases')
-            .select(`
-                *,
-                provider:provider_id (*),
-                items:purchase_items (
-                    *,
-                    input:input_id (*)
-                )
-            `)
-            .order('date', { ascending: false });
+    async createPurchase(purchaseData) {
+        try {
+            const { data: purchase, error: purchaseError } = await supabase
+                .from('purchases')
+                .insert([purchaseData])
+                .select()
+                .single();
 
-        if (error) throw error;
-        return data;
+            if (purchaseError) throw purchaseError;
+            return purchase;
+        } catch (error) {
+            console.error("Error al crear la compra:", error);
+            throw error;
+        }
     },
 
-    // Obtener compra por ID
-    async getById(id) {
-        const { data, error } = await supabase
-            .from('purchases')
-            .select(`
-                *,
-                provider:provider_id (*),
-                items:purchase_items (
-                    *,
-                    input:input_id (*)
-            `)
-            .eq('id', id)
-            .single();
+    async createPurchaseItems(items) {
+        try {
+            const { error: itemsError } = await supabase
+                .from('purchase_items')
+                .insert(items);
 
-        if (error) throw error;
-        return data;
+            if (itemsError) throw itemsError;
+            return true;
+        } catch (error) {
+            console.error("Error al crear items de compra:", error);
+            throw error;
+        }
+    },
+
+    async createCompletePurchase(purchaseData, items, allInputs) {
+        try {
+            // Crear la compra
+            const purchase = await this.createPurchase(purchaseData);
+
+            // Actualizar los items con el purchase_id correcto
+            const itemsWithPurchaseId = items.map(item => ({
+                ...item,
+                purchase_id: purchase.id
+            }));
+
+            // Crear los items de la compra
+            await this.createPurchaseItems(itemsWithPurchaseId);
+
+            // 3. Asociar insumos al producto
+            const updatePromises = itemsWithPurchaseId.map(async (item) => {
+                const currentInput = allInputs.find(i => i.id === item.input_id);
+                if (!currentInput || currentInput.product_id !== purchaseData.product_id) {
+                    try {
+                        await InputService.updateProductAssociation(
+                            item.input_id,
+                            purchaseData.product_id
+                        );
+                        console.log(`Insumo ${item.input_id} asociado correctamente al producto ${purchaseData.product_id}`);
+                    } catch (error) {
+                        console.error(`Error al asociar insumo ${item.input_id}:`, error);
+                    }
+                }
+            });
+
+            await Promise.all(updatePromises);
+
+            return purchase;
+        } catch (error) {
+            console.error("Error en el proceso completo de compra:", error);
+            throw error;
+        }
     }
 };

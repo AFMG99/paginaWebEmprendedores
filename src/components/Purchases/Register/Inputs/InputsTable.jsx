@@ -25,6 +25,10 @@ const InputsTable = ({
 
         if (isEditing) {
             if (field === 'input') {
+                // Separar insumos asociados y no asociados
+                const associatedInputs = inputs.filter(input => input.isAssociated);
+                const nonAssociatedInputs = inputs.filter(input => !input.isAssociated);
+
                 return (
                     <select
                         value={value || ''}
@@ -33,12 +37,32 @@ const InputsTable = ({
                         autoFocus
                     >
                         <option value="">Seleccione un insumo</option>
-                        {inputs.map(input => (
-                            <option key={input.id} value={input.id}>
-                                {input.name} (${input.price.toFixed(2)})
-                                {input.product_id !== Number(currentProductId) && " - Del proveedor"}
-                            </option>
-                        ))}
+
+                        {/* Grupo de insumos asociados */}
+                        {associatedInputs.length > 0 && (
+                            <optgroup label="Insumos asociados al producto">
+                                {associatedInputs.map(input => (
+                                    <option key={`associated-${input.id}`} value={input.id}>
+                                        {input.name} (${input.price.toFixed(2)})
+                                    </option>
+                                ))}
+                            </optgroup>
+                        )}
+
+                        {/* Grupo de insumos no asociados */}
+                        {nonAssociatedInputs.length > 0 && (
+                            <optgroup label="Insumos disponibles">
+                                {nonAssociatedInputs.map(input => (
+                                    <option key={`non-associated-${input.id}`} value={input.id}>
+                                        {input.name} (${input.price.toFixed(2)})
+                                    </option>
+                                ))}
+                            </optgroup>
+                        )}
+
+                        {inputs.length === 0 && (
+                            <option disabled>No hay insumos disponibles</option>
+                        )}
                     </select>
                 );
             } else {
