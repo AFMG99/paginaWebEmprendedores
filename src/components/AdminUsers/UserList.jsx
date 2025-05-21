@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaEdit, FaSave, FaTrash, FaSearch, FaTimes } from "react-icons/fa";
 import { showAllUser, editUser, deleteUser } from '../../service/Services.js';
 import Swal from "sweetalert2";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const UserList = () => {
     const [users, setUsers] = useState([]);
@@ -9,6 +10,7 @@ const UserList = () => {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [editMode, setEditMode] = useState(false);
     const [loading, setLoading] = useState(false);
+    const { user } = useAuth();
 
     useEffect(() => {
         fetchUsers();
@@ -190,28 +192,28 @@ const UserList = () => {
             <div className="footer">
                 <button
                     onClick={handleEdit}
-                    disabled={!selectedUserId || editMode}
+                    disabled={!selectedUserId || editMode || (user?.role !== "Admin")}
                     className="edit-button"
                 >
                     <FaEdit />
                 </button>
                 <button
                     onClick={handleSave}
-                    disabled={!editMode}
+                    disabled={!editMode || (user?.role !== "Admin")}
                     className="save-button"
                 >
                     <FaSave />
                 </button>
                 <button
                     onClick={handleDelete}
-                    disabled={!selectedUserId || editMode}
+                    disabled={!selectedUserId || editMode || (user?.role !== "Admin")}
                     className="delete-button"
                 >
                     <FaTrash />
                 </button>
                 <button
                     onClick={handleCancel}
-                    disabled={!editMode}
+                    disabled={!editMode || (user?.role !== "Admin")}
                     className="cancel-button"
                 >
                     <FaTimes />

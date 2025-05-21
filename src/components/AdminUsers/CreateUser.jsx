@@ -73,7 +73,7 @@ const CreateUser = () => {
         <div className="d-flex flex-column">
             <div className="container mt-4 flex-grow-1">
                 <h2 className="text-center text-titulo">Crear Usuario</h2>
-                <form onSubmit={handleSubmit} className="formulario-registro container-fluid w-50">
+                <form onSubmit={handleSubmit} className="formulario-registro container-fluid">
                     <div className="mb-3">
                         <div className="input-with-icon">
                             <i className="fa fa-user"></i>

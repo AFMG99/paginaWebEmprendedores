@@ -10,6 +10,7 @@ const MenuList = ({ menuItems, onItemClick, selectedItem }) => {
             onItemClick(item);
         } else {
             onItemClick(item);
+            setOpenMenu(null);
         }
     };
 

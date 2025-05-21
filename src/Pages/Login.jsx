@@ -1,15 +1,26 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../assets/css/styles.css';
 import imagen from '../../src/assets/img/LogoRoad.jpeg';
 import Swal from 'sweetalert2';
-import { userLogin } from '../service/Services';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [errorMessage, setErrorMessage] = useState('')
-    const navigate = useNavigate()
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { login, isAuthenticated } = useAuth();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            const from = location.state?.from?.pathname || '/Principal';
+            navigate(from, { replace: true });
+        }
+    }, [isAuthenticated, navigate, location]);
+
+    const from = location.state?.from?.pathname || '/Principal';
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -23,22 +34,22 @@ const Login = () => {
             return;
         }
         try {
-            const user = await userLogin(email, password);
-            if (user) {
+            const success = await login(email, password);
+            if (success) {
                 setErrorMessage('');
                 Swal.fire({
                     icon: 'success',
                     title: 'Inicio de sesión exitoso',
                     text: '¡Bienvenido!',
                     confirmButtonText: 'Aceptar'
-                }).then(() => navigate('/Principal'));
+                }).then(() => navigate(from, { replace: true }));
             } else {
                 setErrorMessage('Correo o contraseña incorrectos');
             }
         } catch (error) {
             setErrorMessage(error.message);
         }
-    };    
+    };
 
     const handleNewPassword = (e) => {
         e.preventDefault();
