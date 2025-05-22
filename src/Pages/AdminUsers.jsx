@@ -5,7 +5,7 @@ import CreateUser from '../components/AdminUsers/CreateUser';
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
 
-const AdminUsers = ({ resetView }) => {
+const AdminUsers = ({ resetView, __testHandleCardClick }) => {
     const [selectedOption, setSelectedOption] = useState(null);
     const { user } = useAuth();
 
@@ -26,16 +26,18 @@ const AdminUsers = ({ resetView }) => {
         setSelectedOption(option);
     };
 
+    const cardClickHandler = __testHandleCardClick || handleCardClick;
+
     return (
         <div className="admin-users-container">
             {selectedOption === null ? (
                 <div className="cards-container">
-                    <div className="card" onClick={() => handleCardClick("consultar")}>
+                    <div className="card" onClick={() => cardClickHandler("consultar")}>
                         <FaUsers className="card-icon" />
                         <span>Consultar Usuarios</span>
                     </div>
                     {user?.role === "Admin" && (
-                        <div className="card" onClick={() => handleCardClick("registrar")}>
+                        <div className="card" onClick={() => cardClickHandler("registrar")}>
                             <FaUserPlus className="card-icon" />
                             <span>Registrar Usuario</span>
                         </div>
