@@ -3,3 +3,9 @@ if (typeof global.TextEncoder === 'undefined') {
     global.TextEncoder = TextEncoder;
     global.TextDecoder = TextDecoder;
 }
+
+if (typeof HTMLCanvasElement !== 'undefined') {
+    HTMLCanvasElement.prototype.getContext = () => {
+        return {};
+    };
+}
