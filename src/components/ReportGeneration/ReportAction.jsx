@@ -1,5 +1,7 @@
 import React from 'react';
-import { MdVisibility, MdVisibilityOff } from "react-icons/md";
+import { MdOutlineVisibilityOff, MdVisibility, MdVisibilityOff } from "react-icons/md";
+import { RiFileExcel2Fill } from "react-icons/ri";
+import { PiFilePdfDuotone } from "react-icons/pi";
 
 const ReportAction = ({ onExportExcel, onExportPDF, onPreview, previewMode, hasData }) => {
     return (
@@ -8,24 +10,25 @@ const ReportAction = ({ onExportExcel, onExportPDF, onPreview, previewMode, hasD
                 onClick={onPreview}
                 className={`btn ${previewMode ? 'btn' : 'btn'}`}
                 disabled={!hasData}
-                style={{ border: 'none' }}
             >
                 {previewMode ? <MdVisibilityOff color='#514660' size="35" /> :
                     <MdVisibility color={!hasData ? 'grey' : '#6200ea'} size="35" />}
             </button>
             <button
                 onClick={onExportExcel}
-                className="btn btn-outline-success"
+                className="btn"
                 disabled={!hasData}
             >
-                Exportar a Excel
+                {previewMode ? <RiFileExcel2Fill color='#4CAF50' size="35" /> :
+                    <RiFileExcel2Fill color={!hasData ? 'grey' : '#4CAF50'} size="35" />}
             </button>
             <button
                 onClick={onExportPDF}
-                className="btn btn-outline-danger"
+                className="btn"
                 disabled={!hasData}
             >
-                Exportar a PDF
+                {previewMode ? <PiFilePdfDuotone color='#F44336' size="35" /> :
+                    <PiFilePdfDuotone color={!hasData ? 'grey' : '#F44336'} size="35" />}
             </button>
         </div>
     );

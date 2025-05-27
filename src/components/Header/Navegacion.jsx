@@ -47,8 +47,8 @@ const Navegacion = () => {
                 </div>
             </nav>
             {/* Modales */}
-            <NotiModal show={showNoti} handleClose={() => setShowNoti(false)} />
-            <ConfigModal show={showConfig} handleClose={() => setShowConfig(false)} />
+            {/* <NotiModal show={showNoti} handleClose={() => setShowNoti(false)} />
+            <ConfigModal show={showConfig} handleClose={() => setShowConfig(false)} /> */}
             <PerfilModal
                 show={showPerfil}
                 handleClose={() => setShowPerfil(false)}

@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { 
-    FaUserCog, 
-    FaShoppingCart, 
-    FaChartBar, 
-    FaFileAlt, 
-    FaUsers, 
-    FaUserPlus, 
-    FaCashRegister, 
-    FaShoppingBasket, 
-    FaDollarSign, 
-    FaClipboardList, 
+import {
+    FaUserCog,
+    FaShoppingCart,
+    FaChartBar,
+    FaFileAlt,
+    FaUsers,
+    FaUserPlus,
+    FaCashRegister,
+    FaShoppingBasket,
+    FaDollarSign,
+    FaClipboardList,
     FaShoppingBag,
     FaBars,
     FaTimes
@@ -34,12 +34,13 @@ const Home = () => {
     const [reset, setReset] = useState(0);
     const [isResponsive, setIsResponsive] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
     const { user } = useAuth();
 
     useEffect(() => {
         handleResize();
         window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize); 
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     const handleResize = () => {
@@ -134,7 +135,7 @@ const Home = () => {
             </aside>
 
             {isResponsive && sidebarOpen && (
-                <div 
+                <div
                     className='sidebar-overlay'
                     onClick={() => setSidebarOpen(false)}
                 />
@@ -143,7 +144,9 @@ const Home = () => {
             <main className="content">
                 {selectedItem ? selectedItem.component : <HomeCarrousel />}
             </main>
-            <button className="floating-button">
+            <button
+                className="floating-button"
+            >
                 💬
             </button>
         </div>
